@@ -5,6 +5,7 @@ resources:
       name: Tereius/conan-azure-templates
       endpoint: Tereius
 
+jobs:
 - job: Linux
   pool:
     vmImage: "ubuntu-18.04"
