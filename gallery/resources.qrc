@@ -1,0 +1,11 @@
+<RCC>
+    <qresource prefix="/">
+        <file>main.qml</file>
+        <file>Presenter.qml</file>
+        <file>BlankPage.qml</file>
+        <file>PresentMain.qml</file>
+        <file>qtquickcontrols2.conf</file>
+        <file>icons/ic_settings.svg</file>
+        <file>icons/code.svg</file>
+    </qresource>
+</RCC>

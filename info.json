@@ -1,0 +1,16 @@
+{
+    "version": {
+        "major": 1,
+        "minor": 0,
+        "patch": 0,
+        "snapshot": true
+    },
+    "projectName": "MaterialRalley",
+    "projectDescription": "A QML module that provides flavored Material widgets (inspired by the Rally Material study)",
+    "vendor": "Björn Stresing",
+    "contact": "bjoern.stresing@gmx.de",
+    "domain": "com.github.Tereius",
+    "copyrightYear": "2022",
+    "license": "MIT",
+    "repository": "https://github.com/Tereius/MaterialRally"
+}
