@@ -2,7 +2,7 @@ import json, os
 from conans import ConanFile, CMake, tools
 
 
-class MaterialRalleyConan(ConanFile):
+class MaterialRallyConan(ConanFile):
     jsonInfo = json.loads(tools.load("info.json"))
     name = jsonInfo["projectName"]
     version = "%u.%u.%u%s" % (jsonInfo["version"]["major"], jsonInfo["version"]["minor"], jsonInfo["version"]["patch"],
@@ -53,4 +53,4 @@ class MaterialRalleyConan(ConanFile):
         self.copy("MaterialRally/*")
 
     def package_info(self):
-        self.env_info.QML_IMPORT_PATH.append(self.package_folder)
+        self.env_info.QML_IMPORT_PATH.append(os.path.join(self.package_folder, "lib", "qml"))

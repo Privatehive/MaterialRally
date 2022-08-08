@@ -35,34 +35,48 @@ include(ECMSetupVersion)
 include(ECMQmlModule)
 include(ECMFindQmlModule)
 
-#options
+file(WRITE "${CMAKE_CURRENT_SOURCE_DIR}/MaterialRallyConfig.cmake.in"
+"@PACKAGE_INIT@
+
+set(QML2_IMPORT_PATH_IN_CONFIG \"@PACKAGE_KDE_INSTALL_QMLDIR@\")
+
+include(CMakeFindDependencyMacro)
+find_dependency(Qt@QT_MAJOR_VERSION@Core)
+
+find_dependency(ECM @ECM_VERSION@)
+include(\${ECM_MODULE_DIR}/ECMFindQmlModule.cmake)
+
+set(MaterialRally_QML_DIR \"\${QML2_IMPORT_PATH_IN_CONFIG}\")
+set(ENV{QML2_IMPORT_PATH} \"\${QML2_IMPORT_PATH_IN_CONFIG}\")
+ecm_find_qmlmodule(MaterialRally 1.0)
+check_required_components(MaterialRally-QMLModule)"
+)
+
+ecm_setup_version(
+	PROJECT
+    VARIABLE_PREFIX MaterialRally
+    VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/MaterialRally_version.h"
+    PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyConfigVersion.cmake"
+    SOVERSION 1
+)
+
+configure_package_config_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/MaterialRallyConfig.cmake.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyConfig.cmake"
+    INSTALL_DESTINATION  "${KDE_INSTALL_CMAKEPACKAGEDIR}/MaterialRally"
+	PATH_VARS KDE_INSTALL_QMLDIR
+)
+
+install(FILES
+    "${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyConfig.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyConfigVersion.cmake"
+    DESTINATION "${KDE_INSTALL_CMAKEPACKAGEDIR}/MaterialRally"
+    COMPONENT Devel
+)
 
 find_package(Qt${QT_MAJOR_VERSION} REQUIRED COMPONENTS Qml Quick QuickControls2)
-
-#include(KDEGitCommitHooks)
-
-#include(ECMGenerateExportHeader)
-
-#include(ECMAddTests)
-#include(ECMSetupVersion)
-#include(ECMQtDeclareLoggingCategory)
-
-set(ENV{QML2_IMPORT_PATH} "${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-set(QML_IMPORT_PATH "" CACHE STRING "" FORCE)
-add_definitions(-DQML_IMPORT_PATHS="${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
-#add_definitions(-DQML_PLUGIN_PATHS="${Kirigami2_INSTALL_PREFIX}/lib/qml/org/kde/kirigami.2,${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 
 add_subdirectory(src)
 #add_subdirectory(gallery)
 
-ecm_setup_version(
-		PROJECT
-		VARIABLE_PREFIX KF5QuickCharts
-		VERSION_HEADER "${CMAKE_CURRENT_BINARY_DIR}/quickcharts_version.h"
-		PACKAGE_VERSION_FILE "${CMAKE_CURRENT_BINARY_DIR}/KF5QuickChartsConfigVersion.cmake"
-		SOVERSION 1
-)
-
-
-#SET(QML_IMPORT_PATH "${QML_IMPORT_PATHS}" CACHE STRING "Qt Creator qml modules search paths" FORCE)
 feature_summary(WHAT ALL FATAL_ON_MISSING_REQUIRED_PACKAGES)
