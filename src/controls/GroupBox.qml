@@ -73,7 +73,7 @@ T.GroupBox {
                         anchors.fill: parent
                         onClicked: {
                             const dialog = Helper.createDialog(
-                                             "controls/InfoDialog.qml",
+                                             "InfoDialog.qml",
                                              T.ApplicationWindow.window, {
                                                  "text": control.infoText
                                              })
