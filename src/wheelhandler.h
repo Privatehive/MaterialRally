@@ -21,6 +21,8 @@ class WheelHandler;
 class KirigamiWheelEvent : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
+    QML_UNCREATABLE("Cannot create objects of type WheelEvent.")
 
     /**
      * x: real
@@ -167,6 +169,7 @@ public:
 class WheelHandler : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
 
     /**
      * @brief This property holds the Qt Quick Flickable that the WheelHandler will control.

@@ -1,8 +1,7 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.Material as T
+import QtQuick.Controls.Material.impl as T
 
 T.Button {
 
@@ -21,12 +20,13 @@ T.Button {
 
     background: Rectangle {
         implicitWidth: 100
-        implicitHeight: control.Material.buttonHeight
+        implicitHeight: T.Material.buttonHeight
 
         radius: 4
-        color: !control.enabled ? control.Material.buttonDisabledColor : control.highlighted ? control.Material.highlightedButtonColor : control.Material.buttonColor
+		color: control.T.Material.buttonColor(control.T.Material.theme, control.T.Material.background, control.T.Material.accent, control.enabled, control.flat, control.highlighted, control.checked)
 
-        Ripple {
+        T.Ripple {
+        	clip: true
             clipRadius: 2
             width: parent.width
             height: parent.height
@@ -34,7 +34,7 @@ T.Button {
             anchor: control
             active: control.down || control.visualFocus || control.hovered
             color: control.flat
-                   && control.highlighted ? control.Material.highlightedRippleColor : control.Material.rippleColor
+                   && control.highlighted ? control.T.Material.highlightedRippleColor : control.T.Material.rippleColor
         }
     }
 }

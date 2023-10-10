@@ -1,9 +1,7 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
-import QtQuick.Window 2.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.Material as T
+import MaterialRally
 
 T.Dialog {
 
@@ -12,7 +10,9 @@ T.Dialog {
     readonly property real yStart: 80
     property alias busy: progressBar.visible
 
-    Material.elevation: 0
+    T.Material.elevation: 0
+    T.Material.roundedScale: T.Material.NotRounded
+
     topPadding: yStart
     enabled: !busy
 
@@ -40,7 +40,7 @@ T.Dialog {
         y: control.yStart
 
         T.RoundButton {
-            icon.name: "ic_arrow_back"
+            icon.source: "qrc:/icons/material_private/48x48/arrow-left.svg"
             flat: true
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
@@ -108,7 +108,7 @@ T.Dialog {
 
             visible: false
 
-            Material.accent: Material.iconColor
+            T.Material.accent: T.Material.iconColor
 
             Component.onCompleted: {
                 contentItem.implicitHeight = 2
@@ -116,7 +116,7 @@ T.Dialog {
 
             background: Rectangle {
                 implicitHeight: 2
-                color: Material.iconColor
+                color: T.Material.iconColor
                 opacity: 0.6
             }
         }
@@ -193,8 +193,8 @@ T.Dialog {
             target: control.background
             property: "color"
             duration: 230
-            from: control.Material.primaryColor
-            to: Qt.lighter(control.Material.backgroundColor, 1.2)
+            from: control.T.Material.primaryColor
+            to: Qt.lighter(control.T.Material.backgroundColor, 1.2)
             easing.type: Easing.OutCubic
         }
     }
@@ -225,8 +225,8 @@ T.Dialog {
                     target: control.background
                     property: "color"
                     duration: 230
-                    from: Qt.lighter(control.Material.backgroundColor, 1.2)
-                    to: control.Material.backgroundColor
+                    from: Qt.lighter(control.T.Material.backgroundColor, 1.2)
+                    to: control.T.Material.backgroundColor
                     easing.type: Easing.OutCubic
                 }
                 NumberAnimation {
@@ -297,17 +297,15 @@ T.Dialog {
         control.contentItem.opacity = 0
         control.header.y = control.yStart
         control.topPadding = control.yStart
-
-        animIn.target = T.ApplicationWindow.window.contentItem
+        animIn.target = control.RootItem.contentItem
         animIn.start()
     }
 
     onAboutToHide: {
 
         animIn.stop()
-        an1mOut.target = T.ApplicationWindow.window.contentItem
+        an1mOut.target = control.RootItem.contentItem
         an1mOut.start()
-        //T.ApplicationWindow.window.contentItem.scale = 1
     }
 
     onOpened: {
@@ -320,9 +318,7 @@ T.Dialog {
     onClosed: {
 
         control.opacity = 1
-
-        // Make sure the main Window is at full scale again
-        T.ApplicationWindow.window.contentItem.scale = 1
+        control.RootItem.contentItem.scale = 1
     }
 
     QtObject {

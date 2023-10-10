@@ -8,6 +8,7 @@
 
 #include <QObject>
 #include <QVariant>
+#include <QtQml/qqmlregistration.h>
 
 /**
  * This class contains global kirigami settings about the current device setup
@@ -16,6 +17,8 @@
 class Settings : public QObject
 {
     Q_OBJECT
+    QML_ELEMENT
+    QML_SINGLETON
 
     /**
      * This property holds whether the system can dynamically enter and exit tablet mode
@@ -35,7 +38,7 @@ class Settings : public QObject
     /**
      * This property holds whether the application is running on a device that is
      * behaving like a tablet.
-     * 
+     *
      * @note This doesn't mean exactly a tablet form factor, but
      * that the preferred input mode for the device is the touch screen
      * and that pointer and keyboard are either secondary or not available.

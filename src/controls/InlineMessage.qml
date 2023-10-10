@@ -1,10 +1,8 @@
-import QtQuick 2.12
-import QtQuick.Layouts 1.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQml.Models 2.12
-import QtQuick.Controls.Material.impl 2.12
+import QtQuick
+import QtQuick.Layouts
+import QtQuick.Controls as T
+import QtQuick.Controls.Material as T
+import QtQml.Models
 
 GroupBox {
 
@@ -41,7 +39,7 @@ GroupBox {
         //propertyAnimOut.start()
     }
 
-    readonly property BusyAction action: BusyAction {
+    readonly property BusyAction defaultAction: BusyAction {
 
         //visible: messageModel.count > grid.columns
         text: control.fold ? qsTr("SEE ALL") + " (" + messageModel.count + ")" : qsTr(
@@ -52,7 +50,7 @@ GroupBox {
         }
     }
 
-    mainAction: messageModel.count > grid.columns ? action : null
+    mainAction: messageModel.count > grid.columns ? defaultAction : null
 
     ListModel {
         id: messageModel
@@ -64,20 +62,20 @@ GroupBox {
                 const severity = messageModel.get(0).severity
                 switch (severity) {
                 case "error":
-                    control.icon.name = "ic_warning"
-                    control.icon.color = control.Material.color(Material.Red)
+                    control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
+                    control.icon.color = control.T.Material.color(T.Material.Red)
                     break
                 case "warning":
-                    control.icon.name = "ic_warning"
-                    control.icon.color = control.Material.color(Material.Yellow)
+                    control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
+                    control.icon.color = control.T.Material.color(T.Material.Yellow)
                     break
                 case "info":
-                    control.icon.name = "information"
-                    control.icon.color = control.Material.accentColor
+                    control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
+                    control.icon.color = control.T.Material.accentColor
                     break
                 default:
-                    control.icon.name = "information"
-                    control.icon.color = control.Material.accentColor
+                    control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
+                    control.icon.color = control.T.Material.accentColor
                 }
             } else {
                 control.title = ""
@@ -179,7 +177,7 @@ GroupBox {
                         }
 
                         T.RoundButton {
-                            icon.name: "playlist-remove"
+                            icon.source: "qrc:/icons/material_private/48x48/playlist-remove.svg"
                             flat: true
                             Layout.alignment: Qt.AlignTop
                             Layout.topMargin: -10
@@ -191,7 +189,7 @@ GroupBox {
 
                     Rectangle {
                         height: 1
-                        color: control.Material.backgroundColor
+                        color: control.T.Material.backgroundColor
                         Layout.fillWidth: true
                     }
                 }

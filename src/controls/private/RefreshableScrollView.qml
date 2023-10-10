@@ -8,8 +8,8 @@ import QtQuick 2.15
 import QtQuick.Controls 2.5
 import QtQuick.Window 2.15
 import QtQuick.Controls 2.0 as QQC2
-import QtGraphicalEffects 1.0
 import QtQuick.Layouts 1.2
+import Qt5Compat.GraphicalEffects
 import QtQml 2.15
 import QtQuick.Controls.Material 2.12
 import MaterialRally 1.0
@@ -66,7 +66,7 @@ ScrollViewBase {
     /**
      * Set when this scrollview manages a whole page
      */
-    property Page page
+    property Item page
 
     property Item _swipeFilter
 

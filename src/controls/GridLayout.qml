@@ -1,11 +1,8 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
-import QtQuick.Layouts 1.12 as L
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Layouts as T
 
-L.GridLayout {
+T.GridLayout {
 
     id: control
 

@@ -9,6 +9,7 @@
 
 #include <QObject>
 #include <memory>
+#include <QtQml/qqmlregistration.h>
 
 class QQmlEngine;
 
@@ -69,6 +70,8 @@ namespace Kirigami {
 class Units : public QObject
 {
 Q_OBJECT
+QML_ELEMENT
+QML_SINGLETON
 
 friend class IconSizes;
 

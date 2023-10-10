@@ -1,29 +1,50 @@
-#include "materialrallyplugin.h"
-#include "settings.h"
-#include "wheelhandler.h"
-#include "units.h"
-#include <QJSEngine>
-#include <QQmlEngine>
+#include <QDir>
+#include <QFontDatabase>
+#include <QQmlApplicationEngine>
 
+/*
+void MaterialRallyPlugin::init() {
 
-void MaterialRallyPlugin::registerTypes(const char *uri) {
+  qputenv("QT_QUICK_CONTROLS_CONF", ":/qt/qml/MaterialRally/qtquickcontrols2.conf");
+  QDir fontsDir(QLatin1String(":/qt/qml/MaterialRally/fonts"));
+  for(const auto &entry : fontsDir.entryList({QLatin1String("*.ttf"), QLatin1String("*.otf")}, QDir::Files)) {
+    auto fontId = QFontDatabase::addApplicationFont(fontsDir.absoluteFilePath(entry));
+    if(fontId >= 0) {
+      qInfo() << "Font registered:" << QFontDatabase::applicationFontFamilies(fontId);
+    } else {
+      qWarning() << "Couldn't install font.";
+    }
+  }
+}*/
 
-    Q_ASSERT(QLatin1String(uri) == QLatin1String("MaterialRally"));
+#include <QtQml/qqmlextensionplugin.h>
 
-    qmlRegisterSingletonType<Settings>(uri, 1, 0, "Settings", [](QQmlEngine *e, QJSEngine *) -> QObject * {
-        Settings *settings = Settings::self();
-        // singleton managed internally, qml should never delete it
-        e->setObjectOwnership(settings, QQmlEngine::CppOwnership);
-        return settings;
-    });
+extern void qml_register_types_MaterialRally();
+Q_GHS_KEEP_REFERENCE(qml_register_types_MaterialRally)
 
-    qmlRegisterSingletonType<Kirigami::Units>(uri, 1, 0, "Units", [] (QQmlEngine *engine, QJSEngine *) {
-        // Fall back to the default units implementation
-        return new Kirigami::Units(engine);
-    });
+class MaterialRallyPlugin : public QQmlEngineExtensionPlugin
+{
+Q_OBJECT
+  Q_PLUGIN_METADATA(IID QQmlEngineExtensionInterface_iid)
 
-    qmlRegisterType<WheelHandler>(uri, 1, 0, "WheelHandler");
-    qmlRegisterUncreatableType<KirigamiWheelEvent>(uri, 1, 0, "WheelEvent", QStringLiteral("Cannot create objects of type WheelEvent."));
+public:
+  explicit MaterialRallyPlugin(QObject *parent = nullptr) : QQmlEngineExtensionPlugin(parent) {
+    volatile auto registration = &qml_register_types_MaterialRally;
+    Q_UNUSED(registration)
+  }
 
-    qmlProtectModule(uri, 1);
-}
+  void initializeEngine(QQmlEngine *engine, const char *uri) override {
+
+    QDir fontsDir(QLatin1String(":/qt/qml/MaterialRally/fonts"));
+    for(const auto &entry : fontsDir.entryList({QLatin1String("*.ttf"), QLatin1String("*.otf")}, QDir::Files)) {
+      auto fontId = QFontDatabase::addApplicationFont(fontsDir.absoluteFilePath(entry));
+      if(fontId >= 0) {
+        qInfo() << "Font registered:" << QFontDatabase::applicationFontFamilies(fontId);
+      } else {
+        qWarning() << "Couldn't install font.";
+      }
+    }
+  }
+};
+
+#include "materialrallyplugin.moc"

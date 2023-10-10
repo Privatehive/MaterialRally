@@ -1,5 +1,5 @@
 .pragma library
-.import QtQml 2.12 as QtQml
+.import QtQml as QtQml
 
 function createDialog(url, parent, options) {
 
@@ -63,7 +63,7 @@ function callDelayed(functor, msDelay) {
             msDelay = 0
 
         timer = Qt.createQmlObject(
-                    'import QtQml 2.12; Timer {running: false; repeat: false; interval: '
+                    'import QtQml; Timer {running: false; repeat: false; interval: '
                     + msDelay + '}', Qt.application)
         timer.triggered.connect(function () {
             functor()

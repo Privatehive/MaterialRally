@@ -1,9 +1,7 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
-import QtQuick.Layouts 1.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.Material as T
+import QtQuick.Layouts
 import "helper.js" as Helper
 
 T.GroupBox {
@@ -14,10 +12,19 @@ T.GroupBox {
     property string infoText: ""
     property alias icon: iconLabel.icon
 
+    T.Material.roundedScale: T.Material.NotRounded
+
+    TapHandler {
+        onTapped: {
+            control.focus = false
+        }
+    }
+
     background: Rectangle {
         width: parent.width
         height: parent.height
         color: "#393942"
+        radius: control.T.Material.roundedScale
     }
 
     topPadding: padding + control.implicitLabelHeight
@@ -31,10 +38,18 @@ T.GroupBox {
 
     label: Item {
 
+        z: 1
         x: control.leftPadding
         visible: control.title.length > 0 || control.mainAction
         implicitWidth: visible ? control.availableWidth : 0
-        implicitHeight: visible ? control.Material.delegateHeight - 4 : 0
+        implicitHeight: visible ? control.T.Material.delegateHeight - 4 : 0
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+                control.focus = false
+            }
+        }
 
         RowLayout {
 
@@ -62,9 +77,9 @@ T.GroupBox {
                 Icon {
                     id: icon
                     visible: control.infoText.length > 0
-                    icon.name: "information-outline"
-                    icon.width: 16
-                    icon.height: 16
+                    icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
+                    icon.width: 20
+                    icon.height: 20
                     anchors.verticalCenter: parent.verticalCenter
                     anchors.left: label.right
                     anchors.leftMargin: 6
@@ -73,8 +88,7 @@ T.GroupBox {
                         anchors.fill: parent
                         onClicked: {
                             const dialog = Helper.createDialog(
-                                             "InfoDialog.qml",
-                                             T.ApplicationWindow.window, {
+                                             "InfoDialog.qml", control, {
                                                  "text": control.infoText
                                              })
                         }
@@ -130,7 +144,7 @@ T.GroupBox {
         Rectangle {
             id: devider
             width: control.availableWidth
-            color: control.Material.backgroundColor
+            color: control.T.Material.backgroundColor
             implicitHeight: 2
             anchors.top: row.bottom
 

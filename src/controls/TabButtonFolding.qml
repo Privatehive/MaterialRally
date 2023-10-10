@@ -1,9 +1,7 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
-import QtGraphicalEffects 1.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.Material as T
+import Qt5Compat.GraphicalEffects
 
 T.Button {
 
@@ -60,7 +58,7 @@ T.Button {
         anchors.fill: button
         radius: 4
         samples: radius * 2 + 1
-        color: control.Material.dropShadowColor
+        color: control.T.Material.dropShadowColor
         source: button
         visible: control.checked
     }
@@ -120,7 +118,7 @@ T.Button {
         anchors.fill: label
         radius: 4
         samples: radius * 2 + 1
-        color: control.Material.dropShadowColor
+        color: control.T.Material.dropShadowColor
         source: label
         opacity: label.opacity
     }

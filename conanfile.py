@@ -1,56 +1,63 @@
-import json, os
-from conans import ConanFile, CMake, tools
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
+import json, os
+from conan import ConanFile
+from conan.tools.cmake import CMake, CMakeToolchain
+from conan.tools.build import cross_building
+from conan.tools.env import VirtualBuildEnv
+
+required_conan_version = ">=2.0"
 
 class MaterialRallyConan(ConanFile):
-    jsonInfo = json.loads(tools.load("info.json"))
+    jsonInfo = json.load(open("info.json", 'r'))
+    # ---Package reference---
     name = jsonInfo["projectName"]
-    version = "%u.%u.%u%s" % (jsonInfo["version"]["major"], jsonInfo["version"]["minor"], jsonInfo["version"]["patch"],
-                              "-SNAPSHOT" if jsonInfo["version"]["snapshot"] else "")
-    license = jsonInfo["license"]
-    url = jsonInfo["repository"]
+    version = "%u.%u.%u" % (jsonInfo["version"]["major"], jsonInfo["version"]["minor"], jsonInfo["version"]["patch"])
+    user = jsonInfo["domain"]
+    channel = "%s" % ("snapshot" if jsonInfo["version"]["snapshot"] else "stable")
+    # ---Metadata---
     description = jsonInfo["projectDescription"]
+    license = jsonInfo["license"]
     author = jsonInfo["vendor"]
-    homepage = jsonInfo["repository"]
-    requires = "Qt/[^5.14]@tereius/stable"
-    settings = ("os", "compiler", "arch", "build_type")
-    generators = "cmake"
-    exports = "info.json", "LICENSE"
+    topics = jsonInfo["topics"]
+    homepage = jsonInfo["homepage"]
+    url = jsonInfo["repository"]
+    # ---Requirements---
+    requires = ("qt/[~6.5]@%s/stable" % user, "qt_app_base/[~1]@%s/snapshot" % user)
+    tool_requires = ["cmake/3.21.7", "ninja/1.11.1"]
+    # ---Sources---
+    exports = ["info.json", "LICENSE"]
     exports_sources = "*"
-    options = {"shared": [True, False]}
-    default_options = (
-        "shared=True",
-        "Qt:shared=True",
-        "Qt:GUI=True",
-        "Qt:widgets=True",
-        "Qt:qtbase=True",
-        "Qt:qtsvg=True",
-        "Qt:qtdeclarative=True",
-        "Qt:qttools=True",
-        "Qt:qttranslations=True",
-        "Qt:qtgraphicaleffects=True",
-        "Qt:qtquickcontrols2=True")
+    # ---Binary model---
+    settings = "os", "compiler", "build_type", "arch"
+    options = {}
+    default_options = {"qt/*:GUI": True,
+                       "qt/*:opengl": "desktop",
+                       "qt/*:qtbase": True,
+                       "qt/*:widgets": True,
+                       "qt/*:qtdeclarative": True,
+                       "qt/*:qt5compat": True}
+    # ---Build---
+    generators = []
+    # ---Folders---
+    no_copy_source = False
 
-    def build_requirements(self):
-        self.build_requires("extra-cmake-modules/5.95.0@tereius/stable", force_host_context=True)
-
-    def configure(self):
-        if self.settings.os == 'Android':
-            self.options["Qt"].qtandroidextras = True
-        elif self.settings.os == 'Emscripten':
-            self.options.shared = False
-            self.options["Qt"].shared = False
+    def generate(self):
+        ms = VirtualBuildEnv(self)
+        tc = CMakeToolchain(self, generator="Ninja")
+        tc.generate()
+        ms.generate()
 
     def build(self):
         cmake = CMake(self)
-        if not self.options.shared:
-            cmake.definitions["BUILD_SHARED_LIBS"] = "OFF"
         cmake.configure()
         cmake.build()
-        cmake.install()
 
     def package(self):
-        self.copy("MaterialRally/*")
+        cmake = CMake(self)
+        cmake.install()
 
     def package_info(self):
-        self.env_info.QML_IMPORT_PATH.append(os.path.join(self.package_folder, "lib", "qml"))
+        self.cpp_info.builddirs = ["lib/cmake"]
+        self.runenv_info.prepend_path("QML_IMPORT_PATH", os.path.join(self.package_folder, "qml"))

@@ -1,22 +1,38 @@
-ecm_add_qml_module(MaterialRallyPlugin URI "MaterialRally" VERSION 1.0 CLASSNAME MaterialRallyPlugin)
+include(GenerateExportHeader)
+include(MaterialIcons)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
-ecm_add_qml_module_dependencies(MaterialRallyPlugin DEPENDS
-        "QtQuick.Controls 2.15"
-        "QtQuick.Controls.Material 2.15"
-        "QtGraphicalEffects 1.0")
+find_package(Qt6 REQUIRED COMPONENTS Quick Gui Qml QuickControls2)
 
-target_sources(MaterialRallyPlugin PRIVATE
-        materialrallyplugin.cpp
-        materialrallyplugin.h
+# Download Roboto Condensed fonts
+file(DOWNLOAD https://fonts.google.com/download?family=Roboto%20Condensed ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_condensed.zip)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf roboto_condensed.zip WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
+
+qt_add_qml_module(MaterialRally
+        URI MaterialRally
+        VERSION 1.0
+        OUTPUT_DIRECTORY MaterialRally
+				NO_GENERATE_PLUGIN_SOURCE
+				NO_PLUGIN_OPTIONAL
+				#PLUGIN_TARGET MaterialRally
+
+        IMPORTS
+        QtQuick
+				Qt5Compat.GraphicalEffects
+
+        SOURCES
+				rootitemattachedtype.h
+				rootitemattachedtype.cpp
+				settings.h
         settings.cpp
-        settings.h
-        wheelhandler.cpp
         wheelhandler.h
-        units.cpp
+        wheelhandler.cpp
         units.h
-)
+        units.cpp
 
-ecm_target_qml_sources(MaterialRallyPlugin SOURCES
+        QML_FILES
+        controls/RallyRootPage.qml
+        controls/RallyApplicationWindow.qml
         controls/BusyAction.qml
         controls/Button.qml
         controls/ComboBox.qml
@@ -35,28 +51,42 @@ ecm_target_qml_sources(MaterialRallyPlugin SOURCES
         controls/ToolBar.qml
         controls/ToolButton.qml
         controls/helper.js
-        )
-
-ecm_target_qml_sources(MaterialRallyPlugin PRIVATE PATH private SOURCES
         controls/private/RefreshableScrollView.qml
         controls/private/ScrollablePageBase.qml
         controls/private/ScrollViewBase.qml
+
+				RESOURCES
+				fonts/RobotoCondensed-Bold.ttf
+				fonts/RobotoCondensed-BoldItalic.ttf
+				fonts/RobotoCondensed-Italic.ttf
+				fonts/RobotoCondensed-Light.ttf
+				fonts/RobotoCondensed-LightItalic.ttf
+				fonts/RobotoCondensed-Regular.ttf
         )
 
-target_compile_definitions(MaterialRallyPlugin PRIVATE -DKIRIGAMI2_VERSION_STRING="1.0.0")
+set(QML_DIRS "")
+list(APPEND QML_DIRS "${CMAKE_CURRENT_BINARY_DIR}")
+set(QML_IMPORT_PATH "${QML_DIRS}" CACHE STRING "Qt Creator extra qml import paths")
 
-target_link_libraries(MaterialRallyPlugin
-        PUBLIC Qt${QT_MAJOR_VERSION}::Core
-        PRIVATE
-        Qt${QT_MAJOR_VERSION}::GuiPrivate
-        Qt${QT_MAJOR_VERSION}::Qml
-        Qt${QT_MAJOR_VERSION}::Quick
-        Qt${QT_MAJOR_VERSION}::QuickControls2
-        )
+target_sources(MaterialRallyplugin PUBLIC materialrallyplugin.cpp)
+target_link_libraries(MaterialRallyplugin PRIVATE Qt6::Quick PRIVATE Qt6::Gui)
 
-if(NOT BUILD_SHARED_LIBS)
-    target_compile_definitions(MaterialRallyPlugin PUBLIC QT_STATICPLUGIN)
-    target_compile_definitions(MaterialRallyPlugin PUBLIC QT_PLUGIN)
-endif()
+add_material_icon_theme_resource(MaterialRally THEME_NAME material_private ICONS
+																 information-outline
+																 alert-outline
+																 playlist-remove
+																 arrow-left
+																 )
 
-ecm_finalize_qml_module(MaterialRallyPlugin DESTINATION ${KDE_INSTALL_QMLDIR})
+qt_add_resources(MaterialRally QtQuickControls2 FILES qtquickcontrols2.conf)
+
+generate_export_header(MaterialRally EXPORT_FILE_NAME MaterialRallyExport.h)
+set_target_properties(MaterialRally PROPERTIES PUBLIC_HEADER "${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyExport.h")
+target_link_libraries(MaterialRally PRIVATE Qt6::Quick PRIVATE Qt6::QuickControls2 PRIVATE Qt6::Gui PRIVATE Qt6::GuiPrivate)
+target_include_directories(MaterialRally PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
+target_include_directories(MaterialRally PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:include>)
+target_compile_definitions(MaterialRally PRIVATE KIRIGAMI2_VERSION_STRING="1.0.0")
+
+install_qml_module(MaterialRally)
+
+add_subdirectory(gallery)

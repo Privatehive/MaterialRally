@@ -1,8 +1,6 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.Material as T
 
 Item {
 
@@ -17,11 +15,11 @@ Item {
 
     icon.width: 20
     icon.height: 20
-    icon.color: !control.enabled ? Material.hintTextColor : control.flat
-                                   && control.highlighted ? Material.accentColor : control.highlighted ? Material.primaryHighlightedTextColor : Material.foreground
+    icon.color: !control.enabled ? T.Material.hintTextColor : control.flat
+                                   && control.highlighted ? T.Material.accentColor : control.highlighted ? T.Material.primaryHighlightedTextColor : T.Material.foreground
 
     IconLabel {
         id: iconLabel
-        display: AbstractButton.IconOnly
+        display: T.AbstractButton.IconOnly
     }
 }
