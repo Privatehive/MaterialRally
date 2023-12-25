@@ -12,7 +12,7 @@ required_conan_version = ">=2.0"
 class MaterialRallyConan(ConanFile):
     jsonInfo = json.load(open("info.json", 'r'))
     # ---Package reference---
-    name = jsonInfo["projectName"]
+    name = jsonInfo["projectName"].lower()
     version = "%u.%u.%u" % (jsonInfo["version"]["major"], jsonInfo["version"]["minor"], jsonInfo["version"]["patch"])
     user = jsonInfo["domain"]
     channel = "%s" % ("snapshot" if jsonInfo["version"]["snapshot"] else "stable")
@@ -24,11 +24,11 @@ class MaterialRallyConan(ConanFile):
     homepage = jsonInfo["homepage"]
     url = jsonInfo["repository"]
     # ---Requirements---
-    requires = ("qt/[~6.5]@%s/stable" % user, "qt_app_base/[~1]@%s/snapshot" % user)
+    requires = ("qt/[>=6.5.0]@%s/stable" % user, "qtappbase/[~1]@%s/snapshot" % user)
     tool_requires = ["cmake/3.21.7", "ninja/1.11.1"]
     # ---Sources---
     exports = ["info.json", "LICENSE"]
-    exports_sources = "*"
+    exports_sources = ["info.json", "*.txt", "src/*", "CMake/*"]
     # ---Binary model---
     settings = "os", "compiler", "build_type", "arch"
     options = {}
@@ -37,6 +37,7 @@ class MaterialRallyConan(ConanFile):
                        "qt/*:qtbase": True,
                        "qt/*:widgets": True,
                        "qt/*:qtdeclarative": True,
+                       "qt/*:qtsvg": True,
                        "qt/*:qt5compat": True}
     # ---Build---
     generators = []

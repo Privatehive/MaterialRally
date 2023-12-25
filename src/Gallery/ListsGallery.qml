@@ -3,13 +3,11 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import MaterialRally 1.0 as Controls
+import MaterialRally as Controls
 
-Page {
+ScrollView {
 
-    ColumnLayout {
-
-		anchors.fill: parent
+    Column {
 
 		Controls.Icon {
 			icon.name: "list-box"
@@ -18,13 +16,22 @@ Page {
         Controls.GroupBox {
             title: qsTr("Scaling test")
             infoText: qsTr("This white rectangle should have a width and height of 1 cm")
-            Layout.fillWidth: true
 
             Rectangle {
                 implicitHeight: Screen.pixelDensity * 10
                 implicitWidth: Screen.pixelDensity * 10
             }
         }
+
+		Controls.GroupBox {
+			title: qsTr("Scaling test")
+			infoText: qsTr("This white rectangle should have a width and height of 1 cm")
+
+			Rectangle {
+				implicitHeight: Screen.pixelDensity * 500
+				implicitWidth: Screen.pixelDensity * 1
+			}
+		}
 
 		Controls.GroupBox {
 
@@ -80,13 +87,6 @@ Page {
 		Controls.Button {
 			text: qsTr("Open Popup")
 			onClicked: popup.open()
-		}
-    }
-
-    Controls.Popup {
-		id: popup
-		Text {
-			text: "asdfasdf asdfas dfasd f"
 		}
     }
 }

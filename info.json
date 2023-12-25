@@ -5,18 +5,20 @@
     "patch": 0,
     "snapshot": true
   },
-  "projectName": "material_rally",
+  "projectName": "MaterialRally",
   "projectDescription": "A QML module that provides flavored Material widgets (inspired by the Rally Material study)",
+  "projectId": 1697486571,
   "vendor": "Björn Stresing",
   "contact": "bjoern.stresing@gmx.de",
   "domain": "com.github.tereius",
   "copyrightYear": "2022",
-  "repository": "https://github.com/Tereius/conan-Qt",
+  "repository": "https://github.com/Tereius/MaterialRally",
   "topics": [
     "Qt",
     "QML",
-    "Material"
+    "Material",
+    "Rally"
   ],
-  "homepage": "https://github.com/Tereius/conan-Qt",
+  "homepage": "https://m2.material.io/design/material-studies/rally.html#about-rally",
   "license": "MIT"
 }

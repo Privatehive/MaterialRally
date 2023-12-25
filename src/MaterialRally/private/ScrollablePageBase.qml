@@ -1,13 +1,15 @@
+
+
 /*
  *  SPDX-FileCopyrightText: 2015 Marco Martin <mart@kde.org>
  *
  *  SPDX-License-Identifier: LGPL-2.0-or-later
  */
-
 import QtQuick 2.15
 import QtQuick.Controls 2.5
 import QtQuick.Templates 2.15 as T
 import QtQuick.Layouts 1.15
+
 
 /**
  * ScrollablePage is a Page that holds scrollable content, such as ListViews.
@@ -60,6 +62,7 @@ import QtQuick.Layouts 1.15
 Page {
     id: root
 
+
     /**
      * \property bool ScrollablePage::refreshing
      * If true the list is asking for refresh and will show a loading spinner.
@@ -69,6 +72,7 @@ Page {
      */
     property alias refreshing: scrollView.refreshing
 
+
     /**
      * \property bool ScrollablePage::supportsRefreshing
      * If true the list supports the "pull down to refresh" behavior.
@@ -76,11 +80,13 @@ Page {
      */
     property alias supportsRefreshing: scrollView.supportsRefreshing
 
+
     /**
      * \property QtQuick.Flickable ScrollablePage::flickable
      * The main Flickable item of this page.
      */
     property alias flickable: scrollView.flickableItem
+
 
     /**
      * \property Qt.ScrollBarPolicy ScrollablePage::verticalScrollBarPolicy
@@ -88,11 +94,13 @@ Page {
      */
     property alias verticalScrollBarPolicy: scrollView.verticalScrollBarPolicy
 
+
     /**
      * \property Qt.ScrollBarPolicy ScrollablePage::horizontalScrollBarPolicy
      * The horizontal scrollbar policy.
      */
     property alias horizontalScrollBarPolicy: scrollView.horizontalScrollBarPolicy
+
 
     /**
      * The main content Item of this page.
@@ -101,6 +109,7 @@ Page {
      * @note This can't be contentItem as Page's contentItem is final.
      */
     default property QtObject mainItem
+
 
     /**
      * If true, and if flickable is an item view, like a ListView or
@@ -112,7 +121,9 @@ Page {
     property bool keyboardNavigationEnabled: true
 
     contentHeight: root.flickable.contentHeight
-    implicitHeight: ((header && header.visible) ? header.implicitHeight : 0) + ((footer && footer.visible) ? footer.implicitHeight : 0) + contentHeight + topPadding + bottomPadding
+    implicitHeight: ((header && header.visible) ? header.implicitHeight : 0)
+                    + ((footer && footer.visible) ? footer.implicitHeight : 0)
+                    + contentHeight + topPadding + bottomPadding
     implicitWidth: root.flickable.contentItem ? root.flickable.contentItem.implicitWidth : contentItem.implicitWidth + leftPadding + rightPadding
 
     clip: true
@@ -127,10 +138,10 @@ Page {
         rightPadding: root.rightPadding
         bottomPadding: contentItem === flickableItem ? 0 : root.bottomPadding
         anchors {
-            top: (root.header && root.header.visible)
-                    ? root.header.bottom
-                    : parent.top
-            bottom: (root.footer && root.footer.visible) ? root.footer.top : parent.bottom
+            top: (root.header
+                  && root.header.visible) ? root.header.bottom : parent.top
+            bottom: (root.footer
+                     && root.footer.visible) ? root.footer.top : parent.bottom
             left: parent.left
             right: parent.right
         }
@@ -138,10 +149,9 @@ Page {
 
     anchors.topMargin: 0
 
-    Keys.forwardTo: root.keyboardNavigationEnabled && root.flickable
-                        ? (("currentItem" in root.flickable) && root.flickable.currentItem ?
-                           [ root.flickable.currentItem, root.flickable ] : [ root.flickable ])
-                        : []
+    Keys.forwardTo: root.keyboardNavigationEnabled
+                    && root.flickable ? (("currentItem" in root.flickable)
+                                         && root.flickable.currentItem ? [root.flickable.currentItem, root.flickable] : [root.flickable]) : []
 
     //HACK to get the mainItem as the last one, all the other eventual items as an overlay
     //no idea if is the way the user expects
@@ -151,11 +161,12 @@ Page {
             mainItem.focus = true
         } else if (mainItem instanceof T.Drawer) {
             //don't try to reparent drawers
-            return;
+            return
         }
 
         if (scrollView.oldMainItem && scrollView.oldMainItem instanceof Item
-            && (typeof applicationWindow === 'undefined'|| scrollView.oldMainItem.parent !== applicationWindow().overlay)) {
+                && (typeof applicationWindow === 'undefined'
+                    || scrollView.oldMainItem.parent !== applicationWindow.overlay)) {
             scrollView.oldMainItem.parent = overlay
         }
         scrollView.oldMainItem = mainItem

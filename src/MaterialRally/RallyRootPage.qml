@@ -1,6 +1,6 @@
 import QtQuick
 import QtQuick.Controls
-import MaterialRally 1.0 as Controls
+import MaterialRally as Controls
 
 // Use this Item as the entrypoint if you use QQuickView::setSource
 Page {

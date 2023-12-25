@@ -3,7 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import MaterialRally 1.0 as Controls
+import MaterialRally as Controls
 
 Controls.RallyApplicationWindow {
 

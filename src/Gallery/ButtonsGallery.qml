@@ -1,13 +1,14 @@
 import QtQuick
 import QtQml
 import QtQuick.Controls
+import QtQuick.Controls.Material
+import MaterialRally as Controls
 
-
-Item {
+Controls.ScrollablePage {
 
 	Button {
-		text: "dialog " + Window.width
-		onClicked: dialog.open()
+		text: "dialog"
+		onClicked: Controls.Helper.createDialog(Qt.resolvedUrl("TestDialog.qml"))
 	}
 
 	Dialog {

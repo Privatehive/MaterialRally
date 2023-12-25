@@ -6,7 +6,7 @@
 import QtQuick 2.7
 import QtQuick.Controls 2.0
 import QtQml 2.15
-import MaterialRally 1.0 as Kirigami
+import MaterialRally as Kirigami
 
 MouseArea {
     id: root

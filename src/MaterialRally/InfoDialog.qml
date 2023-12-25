@@ -28,9 +28,14 @@ T.Dialog {
 
         Behavior on opacity {
             NumberAnimation {
-                duration: 160
+                duration: 120
             }
         }
+
+		Rectangle {
+			anchors.fill: parent
+			color: control.T.Material.backgroundColor
+		}
 
         FastBlur {
             id: headerBlur

@@ -12,7 +12,7 @@ import QtQuick.Layouts 1.2
 import Qt5Compat.GraphicalEffects
 import QtQml 2.15
 import QtQuick.Controls.Material 2.12
-import MaterialRally 1.0
+import MaterialRally
 
 ScrollViewBase {
     id: root
