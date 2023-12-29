@@ -1,106 +1,100 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.impl
+import QtQuick.Controls.Material
+import QtQuick.Controls.Material.impl
 
 T.ComboBox {
 
     id: control
+
+    T.Material.containerStyle: Material.Filled
     selectTextByMouse: true
+    activeFocusOnTab: true
 
-    property color placeholderTextColor: Material.secondaryTextColor
     property string placeholderText: ""
-    property int length: control.displayText.length
-    //topPadding: 22
-    //bottomPadding: 5
-    leftPadding: 0
-    topInset: 0
-    bottomInset: 0
-    leftInset: 0
-    rightInset: 0
+    property color placeholderTextColor: control.enabled
+                                         && control.activeFocus ? T.Material.accentColor : T.Material.hintTextColor
 
-    indicator: ColorImage {
-        x: control.mirrored ? control.padding : control.width - width - control.padding
-        y: ((!control.editable && control.hovered)
-            || indicatorArea.containsMouse
-            || control.down ? 5 : 0) + control.topPadding + (control.availableHeight - height) / 2
-        height: parent.height
-        fillMode: Image.PreserveAspectFit
-        color: {
-            if (control.enabled) {
-                if (control.editable) {
-                    return indicatorArea.containsMouse ? control.Material.accentColor : control.Material.foreground
-                } else {
+    topPadding: control.T.Material.containerStyle
+                === Material.Filled ? placeholderText.length > 0
+                                      && (activeFocus
+                                          || control.contentItem.length
+                                          > 0) ? placeholder.largestHeight : 0 : 0
 
-                    return control.hovered ? control.Material.accentColor : control.Material.foreground
-                }
-            }
-            return control.Material.hintTextColor
-        }
-        source: "qrc:/qt-project.org/imports/QtQuick/Controls.2/Material/images/drop-indicator.png"
+    Component.onCompleted: {
 
-        Ripple {
-            visible: control.editable
-            y: -parent.y
-            clipRadius: 1
-            width: parent.width
-            height: parent.height
-            pressed: control.pressed
-            active: true
-            color: control.flat
-                   && control.highlighted ? control.Material.highlightedRippleColor : control.Material.rippleColor
-        }
+        control.indicator.y = Qt.binding(() => {
+                                             return (control.height - control.indicator.height) / 2
+                                         })
 
-        Behavior on y {
-            SmoothedAnimation {
-                duration: 150
-                velocity: -1
-            }
-        }
+        control.indicator.color = Qt.binding(() => {
+                                                 return control.enabled ? (control.down
+                                                                           || control.activeFocus ? control.T.Material.accent : control.T.Material.foreground) : control.T.Material.hintTextColor
+                                             })
 
-        MouseArea {
-            id: indicatorArea
-            anchors.fill: parent
-            hoverEnabled: control.hoverEnabled
-            acceptedButtons: Qt.NoButton
-        }
+
+        /*
+        control.background.placeholderTextWidth = Qt.binding(() => {
+                                                                 if (placeholder) {
+                                                                     return Math.min(
+                                                                         placeholder.width,
+                                                                         placeholder.implicitWidth)
+                                                                     * placeholder.scale
+                                                                 }
+                                                                 return 0
+                                                             })
+
+        control.background.placeholderHasText = Qt.binding(() => {
+                                                               if (placeholder) {
+                                                                   return placeholder.text.length > 0
+                                                               }
+                                                               return false
+                                                           })
+
+        control.background.controlHasText = Qt.binding(() => {
+                                                           return control.contentItem.length > 0
+                                                       })
+*/
     }
 
-    contentItem: TextField {
-
-        text: control.editable ? control.editText : control.displayText
-
-        rightPadding: 0
-        implicitWidth: 0
-
-        enabled: control.enabled
-        autoScroll: control.editable
-        readOnly: control.down || !control.editable
-        inputMethodHints: control.inputMethodHints
-        validator: control.validator
-
+    FloatingPlaceholderText {
+        id: placeholder
+        x: control.contentItem.leftPadding
+        width: control.contentItem.width - (control.contentItem.leftPadding
+                                            + control.contentItem.rightPadding)
+        text: control.placeholderText
         font: control.font
-        color: control.enabled ? control.Material.foreground : control.Material.hintTextColor
-        selectionColor: control.Material.accentColor
-        selectedTextColor: control.Material.primaryHighlightedTextColor
-        verticalAlignment: Text.AlignVCenter
+        color: control.placeholderTextColor
+        elide: Text.ElideRight
 
-        placeholderText: control.placeholderText
-        placeholderTextColor: control.placeholderTextColor
-
-        cursorDelegate: CursorDelegate {}
-
-        onPressed: {
-            if (!control.editable) {
-                event.accepted = false
-            }
-        }
+        filled: control.T.Material.containerStyle === Material.Filled
+        verticalPadding: control.T.Material.containerStyle
+                         === Material.Filled ? 14 : 0 // control.Material.textFieldVerticalPadding
+        controlHasActiveFocus: control.activeFocus
+        controlHasText: control.contentItem.length > 0
+        controlImplicitBackgroundHeight: control.contentItem.implicitBackgroundHeight
+        controlHeight: control.contentItem.height
     }
 
-    onHoveredChanged: {
-        control.background.manualHover = control.hovered
-    }
+    background: MaterialTextContainer {
+        implicitWidth: 120
+        implicitHeight: control.T.Material.textFieldHeight
 
-    background: control.contentItem.background
+        filled: control.T.Material.containerStyle === Material.Filled
+        fillColor: control.T.Material.textFieldFilledContainerColor
+        outlineColor: (enabled
+                       && control.hovered) ? control.T.Material.primaryTextColor : control.T.Material.hintTextColor
+        focusedOutlineColor: control.T.Material.accentColor
+        // When the control's size is set larger than its implicit size, use whatever size is smaller
+        // so that the gap isn't too big.
+        placeholderTextWidth: Math.min(
+                                  placeholder.width,
+                                  placeholder.implicitWidth) * placeholder.scale
+        //placeholderTextHAlign: control.effectiveHorizontalAlignment
+        controlHasActiveFocus: control.activeFocus
+        controlHasText: control.contentItem.length > 0
+        placeholderHasText: placeholder.text.length > 0
+        horizontalPadding: control.T.Material.textFieldHorizontalPadding
+    }
 }

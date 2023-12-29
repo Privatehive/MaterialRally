@@ -9,6 +9,7 @@ from conan.tools.env import VirtualBuildEnv
 
 required_conan_version = ">=2.0"
 
+
 class MaterialRallyConan(ConanFile):
     jsonInfo = json.load(open("info.json", 'r'))
     # ---Package reference---
@@ -38,7 +39,8 @@ class MaterialRallyConan(ConanFile):
                        "qt/*:widgets": True,
                        "qt/*:qtdeclarative": True,
                        "qt/*:qtsvg": True,
-                       "qt/*:qt5compat": True}
+                       "qt/*:qt5compat": True,
+                       "qtappbase/*:qml": True}
     # ---Build---
     generators = []
     # ---Folders---

@@ -6,8 +6,8 @@ import MaterialRally as Controls
 
 QtObject {
 
-	function createDialog(url, options) {
+	function createDialog(url, options, offset) {
 
-		Helper.createDialog(url, Controls.RootItem.contentItem, options)
+		Helper.createDialog(url, Controls.RootItem.contentItem, options, offset)
 	}
 }

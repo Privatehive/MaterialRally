@@ -13,8 +13,6 @@ Item {
     property bool flat: true
     property bool highlighted: false
 
-    icon.width: 20
-    icon.height: 20
     icon.color: !control.enabled ? T.Material.hintTextColor : control.flat
                                    && control.highlighted ? T.Material.accentColor : control.highlighted ? T.Material.primaryHighlightedTextColor : T.Material.foreground
 

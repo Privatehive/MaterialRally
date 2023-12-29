@@ -7,5 +7,6 @@
 *.jsc
 
 *.qmlproject.user
+src/fonts/*
 
 # End of https://www.toptal.com/developers/gitignore/api/qml

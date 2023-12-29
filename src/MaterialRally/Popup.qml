@@ -7,6 +7,8 @@ T.Dialog {
 
     id: control
 
+    signal backButtonClicked()
+
     readonly property real yStart: 80
     property alias busy: progressBar.visible
 
@@ -45,7 +47,7 @@ T.Dialog {
             anchors.left: parent.left
             anchors.verticalCenter: parent.verticalCenter
             onClicked: {
-                control.close()
+                control.backButtonClicked()
             }
         }
 

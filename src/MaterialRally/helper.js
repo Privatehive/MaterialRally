@@ -1,12 +1,12 @@
 .pragma library
 .import QtQml as QtQml
 
-function createDialog(url, parent, options) {
+function createDialog(url, parent, options, offset) {
 
     const dialog = createItem(Qt.resolvedUrl(url), parent, options)
 
     if (typeof dialog.openWithAnimOffset === "function") {
-        dialog.openWithAnimOffset()
+        dialog.openWithAnimOffset(offset)
     } else if (typeof dialog.open === "function") {
         dialog.open()
     }

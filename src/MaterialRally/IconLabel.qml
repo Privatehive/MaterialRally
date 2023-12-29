@@ -7,6 +7,11 @@ T.AbstractButton {
 
     id: control
 
+    icon.color: !control.enabled ? T.Material.hintTextColor : control.flat
+                                   && control.highlighted ? T.Material.accentColor : control.highlighted ? T.Material.primaryHighlightedTextColor : T.Material.foreground
+
+    spacing: 4
+
     contentItem: T.IconLabel {
 
         spacing: control.spacing

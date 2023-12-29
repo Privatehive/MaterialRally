@@ -10,65 +10,70 @@ find_package(Qt6 REQUIRED COMPONENTS Gui Quick Qml QuickControls2)
 file(DOWNLOAD https://fonts.google.com/download?family=Roboto%20Condensed ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_condensed.zip)
 execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf roboto_condensed.zip WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
 
+file(DOWNLOAD https://fonts.google.com/download?family=Roboto%20Mono ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_mono.zip)
+execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf roboto_mono.zip WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
+
 set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 
 set_source_files_properties(MaterialRally/Helper.qml PROPERTIES
-														QT_QML_SINGLETON_TYPE TRUE
-														)
+        QT_QML_SINGLETON_TYPE TRUE
+)
 
 qt_add_qml_module(MaterialRally
-									URI MaterialRally
-									NO_GENERATE_PLUGIN_SOURCE
-									NO_PLUGIN_OPTIONAL
+        URI MaterialRally
+        NO_GENERATE_PLUGIN_SOURCE
+        NO_PLUGIN_OPTIONAL
 
-									IMPORTS
-									QtQuick
-									Qt5Compat.GraphicalEffects
+        IMPORTS
+        QtQuick
+        Qt5Compat.GraphicalEffects
 
-									SOURCES
-									rootitemattachedtype.h
-									rootitemattachedtype.cpp
-									settings.h
-									settings.cpp
-									wheelhandler.h
-									wheelhandler.cpp
-									units.h
-									units.cpp
+        SOURCES
+        rootitemattachedtype.h
+        rootitemattachedtype.cpp
+        settings.h
+        settings.cpp
+        wheelhandler.h
+        wheelhandler.cpp
+        units.h
+        units.cpp
 
-									QML_FILES
-									MaterialRally/RallyRootPage.qml
-									MaterialRally/RallyApplicationWindow.qml
-									MaterialRally/BusyAction.qml
-									MaterialRally/Button.qml
-									MaterialRally/ComboBox.qml
-									MaterialRally/GridLayout.qml
-									MaterialRally/GroupBox.qml
-									MaterialRally/Icon.qml
-									MaterialRally/IconLabel.qml
-									MaterialRally/InfoDialog.qml
-									MaterialRally/InlineMessage.qml
-									MaterialRally/Popup.qml
-									MaterialRally/ScrollablePage.qml
-									MaterialRally/TabBarFolding.qml
-									MaterialRally/TabButtonFolding.qml
-									MaterialRally/TextArea.qml
-									MaterialRally/TextField.qml
-									MaterialRally/ToolBar.qml
-									MaterialRally/ToolButton.qml
-									MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
-									MaterialRally/Helper.qml
-									MaterialRally/private/RefreshableScrollView.qml
-									MaterialRally/private/ScrollablePageBase.qml
-									MaterialRally/private/ScrollViewBase.qml
+        QML_FILES
+        MaterialRally/ListView.qml
+        MaterialRally/ItemDelegate.qml
+        MaterialRally/ScrollView.qml
+        MaterialRally/PasswordTextField.qml
+        MaterialRally/Divider.qml
+        MaterialRally/FormLayout.qml
+        MaterialRally/RallyRootPage.qml
+        MaterialRally/RallyApplicationWindow.qml
+        MaterialRally/BusyAction.qml
+        MaterialRally/Button.qml
+        MaterialRally/ComboBox.qml
+        MaterialRally/GridLayout.qml
+        MaterialRally/GroupBox.qml
+        MaterialRally/Icon.qml
+        MaterialRally/IconLabel.qml
+        MaterialRally/InfoDialog.qml
+        MaterialRally/InlineMessage.qml
+        MaterialRally/Popup.qml
+        MaterialRally/ScrollablePage.qml
+        MaterialRally/TabBarFolding.qml
+        MaterialRally/TabButtonFolding.qml
+        MaterialRally/TextArea.qml
+        MaterialRally/TextField.qml
+        MaterialRally/ToolBar.qml
+        MaterialRally/ToolButton.qml
+        MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
+        MaterialRally/Helper.qml
+        MaterialRally/private/RefreshableScrollView.qml
+        MaterialRally/private/ScrollablePageBase.qml
+        MaterialRally/private/ScrollViewBase.qml
 
-									RESOURCES
-									fonts/RobotoCondensed-Bold.ttf
-									fonts/RobotoCondensed-BoldItalic.ttf
-									fonts/RobotoCondensed-Italic.ttf
-									fonts/RobotoCondensed-Light.ttf
-									fonts/RobotoCondensed-LightItalic.ttf
-									fonts/RobotoCondensed-Regular.ttf
-									)
+        RESOURCES
+        fonts/RobotoMono-VariableFont_wght.ttf
+        fonts/RobotoCondensed-VariableFont_wght.ttf
+)
 
 set(QML_DIRS "")
 list(APPEND QML_DIRS "${CMAKE_CURRENT_BINARY_DIR}")
@@ -78,11 +83,14 @@ target_sources(MaterialRallyplugin PRIVATE materialrallyplugin.cpp)
 target_link_libraries(MaterialRallyplugin PRIVATE Qt6::Gui PRIVATE Qt6::Quick)
 
 add_material_icon_theme_resource(MaterialRally THEME_NAME material_private ICONS
-																 information-outline
-																 alert-outline
-																 playlist-remove
-																 arrow-left
-																 )
+        information-outline
+        alert-outline
+        playlist-remove
+        arrow-left
+        eye
+        eye-off
+        chevron-right
+)
 
 qt_add_resources(MaterialRally QtQuickControls2 FILES qtquickcontrols2.conf)
 
@@ -96,37 +104,37 @@ target_compile_definitions(MaterialRally PRIVATE KIRIGAMI2_VERSION_STRING="1.0.0
 install_qml_module(MaterialRally)
 
 # Gallery
-if(FEATURE_GALLERY_APP)
-	find_package(QtAppBase REQUIRED)
+if (FEATURE_GALLERY_APP)
+    find_package(QtAppBase REQUIRED)
 
-	qt_add_executable(RallyGallery main.cpp)
+    qt_add_executable(RallyGallery main.cpp)
 
-	qt_add_qml_module(RallyGallery
-										URI Gallery
+    qt_add_qml_module(RallyGallery
+            URI Gallery
 
-										QML_FILES
-										Gallery/main.qml
-										Gallery/ButtonsGallery.qml
-										Gallery/ListsGallery.qml
-										Gallery/TestDialog.qml
-										)
+            QML_FILES
+            Gallery/main.qml
+            Gallery/ButtonsGallery.qml
+            Gallery/ListsGallery.qml
+            Gallery/TestDialog.qml
+    )
 
-	target_link_libraries(RallyGallery
-												PRIVATE Qt6::Core
-												PRIVATE Qt6::Gui
-												PRIVATE Qt6::Network
-												PRIVATE Qt6::Qml
-												PRIVATE Qt6::Quick
-												PRIVATE Qt6::QuickTemplates2
-												PRIVATE Qt6::QuickControls2
-												PRIVATE QtAppBase
-												PRIVATE MaterialRally
-												)
+    target_link_libraries(RallyGallery
+            PRIVATE Qt6::Core
+            PRIVATE Qt6::Gui
+            PRIVATE Qt6::Network
+            PRIVATE Qt6::Qml
+            PRIVATE Qt6::Quick
+            PRIVATE Qt6::QuickTemplates2
+            PRIVATE Qt6::QuickControls2
+            PRIVATE QtAppBase
+            PRIVATE MaterialRally
+    )
 
-	add_dependencies(RallyGallery MaterialRallyplugin)
+    add_dependencies(RallyGallery MaterialRallyplugin)
 
-	add_material_icon_theme_resource(MaterialRally THEME_NAME material ICONS
-																	 button-cursor
-																	 list-box
-																	 )
-endif()
+    add_material_icon_theme_resource(MaterialRally THEME_NAME material ICONS
+            button-cursor
+            list-box
+    )
+endif ()

@@ -101,20 +101,32 @@ Controls.RallyApplicationWindow {
         }
     }
 
-    SwipeView {
+    ScrollView {
 
-        id: view
         anchors.fill: parent
 
-        Repeater {
-            model: mainMenuModel
-            Loader {
-                id: loader
-                active: SwipeView.isCurrentItem || SwipeView.isNextItem
-                        || SwipeView.isPreviousItem
-                asynchronous: true
-                source: Qt.resolvedUrl(qmlSource)
-                visible: status == Loader.Ready
+        contentWidth: width
+        contentHeight: Math.max(view.implicitHeight, height)
+
+        ScrollBar.vertical.policy: contentHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        ScrollBar.horizontal.interactive: false
+
+        SwipeView {
+
+            id: view
+            anchors.fill: parent
+
+            Repeater {
+                model: mainMenuModel
+                Loader {
+                    id: loader
+                    active: SwipeView.isCurrentItem || SwipeView.isNextItem
+                            || SwipeView.isPreviousItem
+                    asynchronous: true
+                    source: Qt.resolvedUrl(qmlSource)
+                    visible: status == Loader.Ready
+                }
             }
         }
     }
