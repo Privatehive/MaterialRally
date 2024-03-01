@@ -8,6 +8,11 @@ QtObject {
 
 	function createDialog(url, options, offset) {
 
-		Helper.createDialog(url, Controls.RootItem.contentItem, options, offset)
+		return Helper.createDialog(url, Controls.RootItem.contentItem, options, offset)
+	}
+
+	function createItem(url, parent, options) {
+
+        return Helper.createItem(url, parent, options)
 	}
 }

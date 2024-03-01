@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import MaterialRally as Controls
 
-Controls.RallyApplicationWindow {
+Controls.RallyRootPage {
 
     id: root
 

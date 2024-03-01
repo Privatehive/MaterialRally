@@ -35,6 +35,11 @@ GroupBox {
         //propertyAnimIn.start()
     }
 
+    function clear() {
+
+        messageModel.clear()
+    }
+
     function hide() {//propertyAnimIn.stop()
         //propertyAnimOut.start()
     }
@@ -63,18 +68,22 @@ GroupBox {
                 switch (severity) {
                 case "error":
                     control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
-                    control.icon.color = control.T.Material.color(T.Material.Red)
+                    control.icon.color = control.T.Material.color(
+                                T.Material.Red)
                     break
                 case "warning":
                     control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
-                    control.icon.color = control.T.Material.color(T.Material.Yellow)
+                    control.icon.color = control.T.Material.color(
+                                T.Material.Yellow)
                     break
                 case "info":
-                    control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
+                    control.icon.source
+                            = "qrc:/icons/material_private/48x48/information-outline.svg"
                     control.icon.color = control.T.Material.accentColor
                     break
                 default:
-                    control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
+                    control.icon.source
+                            = "qrc:/icons/material_private/48x48/information-outline.svg"
                     control.icon.color = control.T.Material.accentColor
                 }
             } else {

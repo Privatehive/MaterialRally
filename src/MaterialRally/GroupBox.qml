@@ -29,6 +29,8 @@ T.GroupBox {
 
     topPadding: padding + control.implicitLabelHeight
 
+    clip: true
+
     Behavior on implicitHeight {
         NumberAnimation {
             duration: 300
@@ -102,7 +104,7 @@ T.GroupBox {
                 action: control.mainAction
                 leftPadding: 0
                 rightPadding: 0
-                visible: action
+                visible: action && !action.checkable
                 enabled: control.mainAction ? !control.mainAction.busy : false
                 implicitHeight: parent.height
 
@@ -138,6 +140,47 @@ T.GroupBox {
                         }
                     }
                 }
+            }
+
+            T.Switch {
+
+                id: toggleButton
+
+                Binding {
+                    target: control
+                    property: "contentHeight"
+                    when: toggleButton.visible && !toggleButton.checked
+                    value: 0
+                }
+
+                Binding {
+                    target: control
+                    property: "topPadding"
+                    when: toggleButton.visible && !toggleButton.checked
+                    value: control.implicitLabelHeight
+                }
+
+                Binding {
+                    target: control
+                    property: "bottomPadding"
+                    when: toggleButton.visible && !toggleButton.checked
+                    value: 0
+                }
+
+                Binding {
+                    target: control.contentItem
+                    property: "opacity"
+                    when: toggleButton.visible && !toggleButton.checked
+                    value: 0
+                }
+
+                action: control.mainAction
+                leftPadding: 0
+                rightPadding: 0
+                checked: true
+                visible: action && action.checkable
+                enabled: control.mainAction ? !control.mainAction.busy : false
+                scale: 0.75
             }
         }
 

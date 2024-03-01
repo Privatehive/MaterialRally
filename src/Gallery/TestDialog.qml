@@ -2,7 +2,10 @@ import QtQuick
 import QtQuick.Controls
 import MaterialRally as Controls
 
-Controls.InfoDialog {
+Controls.Dialog {
 
-	title: "test"
+    title: "test"
+    onBackButtonClicked: {
+        close()
+    }
 }

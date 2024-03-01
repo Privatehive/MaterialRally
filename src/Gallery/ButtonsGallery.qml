@@ -17,12 +17,43 @@ Pane {
                                                         "TestDialog.qml"))
         }
 
+        Controls.GroupBox {
+
+            Layout.fillWidth: true
+            title: qsTr("Test")
+
+            mainAction: Controls.BusyAction {
+
+                checkable: false
+                text: "test"
+            }
+
+            ColumnLayout {
+
+                Layout.fillWidth: true
+
+                Label {
+                    text: "asdfasdf"
+                }
+
+                Label {
+                    text: "asdfasdf"
+                }
+
+                Label {
+                    text: "asdfasdf"
+                }
+
+                Label {
+                    text: "asdfasdf"
+                }
+            }
+        }
+
         Controls.ComboBox {
 
             Layout.fillWidth: true
 
-            //editable: true
-            //Material.containerStyle: Material.Outlined
             placeholderText: qsTr("terst")
             model: [{
                     "text": "Element1"
@@ -102,18 +133,18 @@ Pane {
             }
         }
 
-Row {
-        Controls.Icon {
+        Row {
+            Controls.Icon {
 
-            icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
-        }
+                icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
+            }
 
-        Controls.IconLabel {
+            Controls.IconLabel {
 
-            icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
-            text: "test"
-            display: AbstractButton.TextUnderIcon
-        }
+                icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
+                text: "test"
+                display: AbstractButton.TextUnderIcon
+            }
         }
     }
 

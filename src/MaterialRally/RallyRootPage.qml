@@ -10,9 +10,4 @@ Page {
     Controls.RootItem.contentItem: root.contentItem
     Controls.RootItem.header: root.header
     Controls.RootItem.footer: root.footer
-
-    Window.onWindowChanged: {
-
-        Window.window.color = Material.backgroundColor
-    }
 }

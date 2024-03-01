@@ -15,10 +15,10 @@ int main(int argc, char **argv) {
   if (QFile::exists(qmlMainFile)) {
     qInfo() << "QML hot reloading enabled";
     qmlEngine.setHotReload(true);
-    qmlEngine.loadRootItem(qmlMainFile, false);
+    qmlEngine.loadRootItem(qmlMainFile, true);
   } else {
     qmlEngine.setHotReload(false);
-    qmlEngine.loadRootItem("qrc:/qt/qml/Gallery/Gallery/main.qml", false);
+    qmlEngine.loadRootItem("qrc:/qt/qml/Gallery/Gallery/main.qml", true);
   }
 #else
   qmlEngine.setHotReload(false);

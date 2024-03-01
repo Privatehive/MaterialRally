@@ -10,32 +10,68 @@ T.Dialog {
 
     property alias text: label.text
 
-    parent: T.Overlay.overlay
     modal: true
+    parent: T.Overlay.overlay
     focus: true
     anchors.centerIn: parent
     width: Math.min(Math.max(parent.width / 2, 200), 500)
 
-    closePolicy: Popup.CloseOnEscape
+    closePolicy: T.Popup.CloseOnEscape
 
     opacity: 0
 
     T.Overlay.modal: Item {
 
+        id: modalOverlay
+
         anchors.fill: parent
+
+        opacity: 0
         layer.enabled: true
-        opacity: control.opacity
 
-        Behavior on opacity {
-            NumberAnimation {
-                duration: 120
+        // Workaround: The overlay item is created with a delay
+        states: [
+            State {
+                when: priv.state === "open"
+                name: "open"
+            },
+            State {
+                when: priv.state === "close"
+                name: "close"
             }
-        }
+        ]
 
-		Rectangle {
-			anchors.fill: parent
-			color: control.T.Material.backgroundColor
-		}
+        transitions: [
+            Transition {
+                from: "*"
+                to: "open"
+                PropertyAnimation {
+                    target: modalOverlay
+                    property: "opacity"
+                    duration: 180
+                    easing.type: Easing.OutQuart
+                    from: 0
+                    to: 1
+                }
+            },
+            Transition {
+                from: "*"
+                to: "close"
+                PropertyAnimation {
+                    target: modalOverlay
+                    property: "opacity"
+                    duration: 180
+                    easing.type: Easing.InQuart
+                    from: 1
+                    to: 0
+                }
+            }
+        ]
+
+        Rectangle {
+            anchors.fill: parent
+            color: control.T.Material.backgroundColor
+        }
 
         FastBlur {
             id: headerBlur
@@ -75,6 +111,11 @@ T.Dialog {
 
     enter: Transition {
         ParallelAnimation {
+            ScriptAction {
+                script: {
+                    priv.state = "open"
+                }
+            }
             NumberAnimation {
                 property: "opacity"
                 duration: 180
@@ -94,6 +135,11 @@ T.Dialog {
 
     exit: Transition {
         ParallelAnimation {
+            ScriptAction {
+                script: {
+                    priv.state = "close"
+                }
+            }
             NumberAnimation {
                 property: "opacity"
                 duration: 180
@@ -119,6 +165,11 @@ T.Dialog {
 
     background: Rectangle {
         color: "black"
+    }
+
+    QtObject {
+        id: priv
+        property string state: ""
     }
 
     footer: ToolButton {
