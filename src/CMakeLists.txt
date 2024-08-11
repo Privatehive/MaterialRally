@@ -25,7 +25,8 @@ set_source_files_properties(MaterialRally/Helper.qml PROPERTIES
 
 qt_add_qml_module(MaterialRally
         URI MaterialRally
-        NO_GENERATE_PLUGIN_SOURCE
+        CLASS_NAME materialrallyplugin
+
         NO_PLUGIN_OPTIONAL
 
         IMPORTS
@@ -83,8 +84,8 @@ set(QML_DIRS "")
 list(APPEND QML_DIRS "${CMAKE_CURRENT_BINARY_DIR}")
 set(QML_IMPORT_PATH "${QML_DIRS}" CACHE STRING "Qt Creator extra qml import paths")
 
-target_sources(MaterialRallyplugin PRIVATE materialrallyplugin.cpp)
-target_link_libraries(MaterialRallyplugin PRIVATE Qt6::Gui PRIVATE Qt6::Quick)
+target_sources(MaterialRallyplugin PRIVATE materialrallyplugin.h materialrallyplugin.cpp)
+#target_link_libraries(MaterialRallyplugin PRIVATE Qt6::Gui PRIVATE Qt6::Quick)
 
 add_material_icon_theme_resource(MaterialRally THEME_NAME material_private ICONS
         information-outline
@@ -99,13 +100,15 @@ add_material_icon_theme_resource(MaterialRally THEME_NAME material_private ICONS
 qt_add_resources(MaterialRally QtQuickControls2 FILES qtquickcontrols2.conf)
 
 generate_export_header(MaterialRally EXPORT_FILE_NAME MaterialRallyExport.h)
-target_mark_public_header(MaterialRally ${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyExport.h)
+target_mark_public_header(MaterialRally
+        settings.h
+        units.h
+        ${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyExport.h
+)
 target_link_libraries(MaterialRally PUBLIC Qt6::Gui PUBLIC Qt6::Quick PUBLIC Qt6::Qml PUBLIC Qt6::QuickControls2 PRIVATE Qt6::GuiPrivate)
 target_include_directories(MaterialRally PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
 target_include_directories(MaterialRally PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:include>)
 target_compile_definitions(MaterialRally PRIVATE KIRIGAMI2_VERSION_STRING="1.0.0")
-
-install_qml_module(MaterialRally)
 
 # Gallery
 if (FEATURE_GALLERY_APP)
@@ -142,3 +145,5 @@ if (FEATURE_GALLERY_APP)
             list-box
     )
 endif ()
+
+install_qml_module(MaterialRally)

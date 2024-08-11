@@ -9,12 +9,13 @@
 #include <QObject>
 #include <QVariant>
 #include <QtQml/qqmlregistration.h>
+#include "MaterialRallyExport.h"
 
 /**
  * This class contains global kirigami settings about the current device setup
  * It is exposed to QML as the singleton "Settings"
  */
-class Settings : public QObject
+class MATERIALRALLY_EXPORT Settings : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

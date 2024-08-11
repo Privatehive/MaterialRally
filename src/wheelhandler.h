@@ -11,6 +11,7 @@
 #include <QQuickItem>
 #include <QStyleHints>
 #include <QtQml>
+#include "MaterialRallyExport.h"
 
 class QWheelEvent;
 class WheelHandler;
@@ -18,7 +19,7 @@ class WheelHandler;
 /**
  * Describes the mouse wheel event
  */
-class KirigamiWheelEvent : public QObject
+class MATERIALRALLY_EXPORT KirigamiWheelEvent : public QObject
 {
     Q_OBJECT
     QML_ELEMENT

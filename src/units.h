@@ -10,6 +10,7 @@
 #include <QObject>
 #include <memory>
 #include <QtQml/qqmlregistration.h>
+#include "MaterialRallyExport.h"
 
 class QQmlEngine;
 
@@ -22,7 +23,7 @@ namespace Kirigami {
  *
  * Provides access to platform-dependent icon sizing
  */
-    class IconSizes : public QObject
+    class MATERIALRALLY_EXPORT IconSizes : public QObject
 {
     Q_OBJECT
 

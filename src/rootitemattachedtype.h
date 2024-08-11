@@ -1,8 +1,9 @@
 #include <QObject>
 #include <QQuickItem>
+#include "MaterialRallyExport.h"
 
 
-class RootItemAttachedType : public QObject {
+class MATERIALRALLY_EXPORT RootItemAttachedType : public QObject {
 
   Q_OBJECT
   Q_PROPERTY(QQuickItem* contentItem READ getContentItem WRITE setContentItem NOTIFY contentItemChanged)
