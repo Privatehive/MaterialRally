@@ -7,14 +7,12 @@ set(FEATURE_GALLERY_APP OFF CACHE BOOL "Build the gallery app")
 find_package(Qt6 REQUIRED COMPONENTS Gui Quick Qml QuickControls2)
 
 # Download Roboto Condensed fonts
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_condensed.zip)
-    file(DOWNLOAD https://fonts.google.com/download?family=Roboto%20Condensed ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_condensed.zip)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf roboto_condensed.zip WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts/RobotoCondensed.ttf)
+    file(DOWNLOAD "https://raw.githubusercontent.com/google/fonts/main/ofl/robotocondensed/RobotoCondensed%5Bwght%5D.ttf" ${CMAKE_CURRENT_SOURCE_DIR}/fonts/RobotoCondensed.ttf)
 endif ()
 
-if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_mono.zip)
-    file(DOWNLOAD https://fonts.google.com/download?family=Roboto%20Mono ${CMAKE_CURRENT_SOURCE_DIR}/fonts/roboto_mono.zip)
-    execute_process(COMMAND ${CMAKE_COMMAND} -E tar xf roboto_mono.zip WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/fonts)
+if (NOT EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/fonts/RobotoMono.ttf)
+    file(DOWNLOAD "https://raw.githubusercontent.com/google/fonts/main/apache/robotomono/RobotoMono%5Bwght%5D.ttf" ${CMAKE_CURRENT_SOURCE_DIR}/fonts/RobotoMono.ttf)
 endif ()
 
 set(QT_QML_OUTPUT_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
@@ -76,8 +74,8 @@ qt_add_qml_module(MaterialRally
         MaterialRally/private/ScrollViewBase.qml
 
         RESOURCES
-        fonts/RobotoMono-VariableFont_wght.ttf
-        fonts/RobotoCondensed-VariableFont_wght.ttf
+        fonts/RobotoMono.ttf
+        fonts/RobotoCondensed.ttf
 )
 
 set(QML_DIRS "")
