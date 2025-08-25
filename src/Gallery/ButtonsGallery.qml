@@ -1,9 +1,9 @@
-import QtQuick
 import QtQml
+import QtQuick
 import QtQuick.Layouts
 import QtQuick.Controls
 import QtQuick.Controls.Material
-import MaterialRally as Controls
+import MaterialRally as Rally
 
 Pane {
 
@@ -13,19 +13,24 @@ Pane {
 
         Button {
             text: "dialog"
-            onClicked: Controls.Helper.createDialog(Qt.resolvedUrl(
-                                                        "TestDialog.qml"))
+            onClicked: Rally.Helper.createDialog(Qt.resolvedUrl("TestDialog.qml"))
         }
 
-        Controls.GroupBox {
+        Label {
+            text: "is touch input: " + Rally.RootItem.isTouchInput
+        }
+
+        Rally.GroupBox {
 
             Layout.fillWidth: true
+            infoText: "test"
             title: qsTr("Test")
 
-            mainAction: Controls.BusyAction {
+            mainAction: Rally.BusyAction {
 
                 checkable: false
                 text: "test"
+                busy: true
             }
 
             ColumnLayout {
@@ -33,7 +38,7 @@ Pane {
                 Layout.fillWidth: true
 
                 Label {
-                    text: "asdfasdf"
+                    text: "9"
                 }
 
                 Label {
@@ -50,7 +55,7 @@ Pane {
             }
         }
 
-        Controls.ComboBox {
+        Rally.ComboBox {
 
             Layout.fillWidth: true
 
@@ -85,7 +90,7 @@ Pane {
             placeholderText: "terst"
         }
 
-        Controls.FormLayout {
+        Rally.FormLayout {
 
             Layout.fillWidth: true
 
@@ -98,7 +103,7 @@ Pane {
                 Material.containerStyle: Material.Filled
             }
 
-            Controls.Divider {}
+            Rally.Divider {}
 
             Label {
                 text: "test"
@@ -109,10 +114,10 @@ Pane {
                 Material.containerStyle: Material.Filled
             }
 
-            Controls.PasswordTextField {}
+            Rally.PasswordTextField {}
         }
 
-        Controls.ListView {
+        Rally.ListView {
 
             Layout.fillWidth: true
 
@@ -127,40 +132,24 @@ Pane {
                 }
             }
 
-            delegate: Controls.ItemDelegate {
+            delegate: Rally.ItemDelegate {
 
                 text: "Test mmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmmm " + index
             }
         }
 
         Row {
-            Controls.Icon {
+            Rally.Icon {
 
                 icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
             }
 
-            Controls.IconLabel {
+            Rally.IconLabel {
 
                 icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
                 text: "test"
                 display: AbstractButton.TextUnderIcon
             }
-        }
-    }
-
-    Dialog {
-
-        id: dialog
-        parent: Overlay.overlay
-
-        title: "asdfasdf"
-        width: parent.width / 2
-        x: 100
-        y: 100
-        height: Window.height
-
-        Label {
-            text: "asdfasdfasd fasdas sd"
         }
     }
 }

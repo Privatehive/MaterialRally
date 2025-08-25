@@ -5,7 +5,7 @@ import QtQuick.Layouts
 ColumnLayout {
 
     id: control
-    property string text: ""
+
     spacing: 10
 
     onChildrenChanged: {

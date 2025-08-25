@@ -1,44 +1,13 @@
-import QtQuick
 import QtQml
+import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import MaterialRally as Controls
+import MaterialRally as Rally
 
-Controls.RallyRootPage {
+Rally.RallyApplicationWindow {
 
     id: root
-
-    Label {
-
-        id: sizeLabel
-        padding: 10
-        text: "w: " + root.width + " h: " + root.height
-        anchors.centerIn: root.contentItem
-        z: 1
-
-        Connections {
-            target: root
-            function onWidthChanged() {
-                sizeLabel.visible = true
-                sizeLabelTimer.restart()
-            }
-        }
-
-        Timer {
-            id: sizeLabelTimer
-            interval: 1000
-            onTriggered: {
-                parent.visible = false
-            }
-        }
-
-        background: Rectangle {
-            color: "black"
-            opacity: 0.5
-            radius: 4
-        }
-    }
 
     ListModel {
 
@@ -58,9 +27,10 @@ Controls.RallyRootPage {
         }
     }
 
-    header: Controls.ToolBar {
+    header: Rally.ToolBar
+    {
 
-        Controls.TabBarFolding {
+        Rally.TabBarFolding {
 
             id: tabBar
             anchors.centerIn: parent
@@ -71,7 +41,7 @@ Controls.RallyRootPage {
 
             Repeater {
                 model: mainMenuModel
-                Controls.TabButtonFolding {
+                Rally.TabButtonFolding {
 
                     checked: defaultChecked
                     icon.name: iconName
@@ -101,28 +71,24 @@ Controls.RallyRootPage {
         }
     }
 
-    ScrollView {
+    Rally.ScrollView {
 
         anchors.fill: parent
 
-        contentWidth: width
-        contentHeight: Math.max(view.implicitHeight, height)
-
-        ScrollBar.vertical.policy: contentHeight > height ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
-        ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
-        ScrollBar.horizontal.interactive: false
+        reloadable: false
 
         SwipeView {
 
             id: view
-            anchors.fill: parent
+            width: parent.width
 
             Repeater {
+
                 model: mainMenuModel
+
                 Loader {
                     id: loader
-                    active: SwipeView.isCurrentItem || SwipeView.isNextItem
-                            || SwipeView.isPreviousItem
+                    active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
                     asynchronous: true
                     source: Qt.resolvedUrl(qmlSource)
                     visible: status == Loader.Ready

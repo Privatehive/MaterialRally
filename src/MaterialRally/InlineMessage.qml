@@ -3,6 +3,7 @@ import QtQuick.Layouts
 import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
 import QtQml.Models
+import MaterialRally
 
 GroupBox {
 
@@ -47,8 +48,7 @@ GroupBox {
     readonly property BusyAction defaultAction: BusyAction {
 
         //visible: messageModel.count > grid.columns
-        text: control.fold ? qsTr("SEE ALL") + " (" + messageModel.count + ")" : qsTr(
-                                 "SEE LESS")
+        text: control.fold ? qsTr("SEE ALL") + " (" + messageModel.count + ")" : qsTr("SEE LESS")
 
         onTriggered: {
             control.fold = !control.fold
@@ -68,22 +68,18 @@ GroupBox {
                 switch (severity) {
                 case "error":
                     control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
-                    control.icon.color = control.T.Material.color(
-                                T.Material.Red)
+                    control.icon.color = control.T.Material.color(T.Material.Red)
                     break
                 case "warning":
                     control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
-                    control.icon.color = control.T.Material.color(
-                                T.Material.Yellow)
+                    control.icon.color = control.T.Material.color(T.Material.Yellow)
                     break
                 case "info":
-                    control.icon.source
-                            = "qrc:/icons/material_private/48x48/information-outline.svg"
+                    control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
                     control.icon.color = control.T.Material.accentColor
                     break
                 default:
-                    control.icon.source
-                            = "qrc:/icons/material_private/48x48/information-outline.svg"
+                    control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
                     control.icon.color = control.T.Material.accentColor
                 }
             } else {
@@ -102,16 +98,17 @@ GroupBox {
 
             id: grid
 
-            property real minWidth: (parent.width - (grid.columns - 1)
-                                     * columnSpacing) / grid.columns
+            property real minWidth: (parent.width - (grid.columns - 1) * columnSpacing) / grid.columns
 
             columns: Math.max(parent.width / 400, 1)
             columnSpacing: 50
             rowSpacing: 10
 
             add: Transition {
-                id: transition
                 SequentialAnimation {
+                    PauseAnimation {
+                        duration: 100
+                    }
                     PropertyAction {
                         property: "opacity"
                         value: 0
@@ -119,10 +116,6 @@ GroupBox {
                     PropertyAction {
                         property: "scale"
                         value: 0.9
-                    }
-                    PauseAnimation {
-                        duration: grid.columns > 1
-                                  && messageModel.count > 1 ? 200 : 0
                     }
                     NumberAnimation {
                         properties: "opacity, scale"
@@ -134,7 +127,6 @@ GroupBox {
             }
 
             move: Transition {
-                id: transition1
                 SequentialAnimation {
                     ParallelAnimation {
                         NumberAnimation {
@@ -145,22 +137,13 @@ GroupBox {
                         }
                         NumberAnimation {
                             properties: "x,y"
-                            duration: 300
-                            easing.type: Easing.OutCubic
+                            duration: 200
+                            easing.type: Easing.OutQuad
                         }
                     }
                 }
             }
 
-
-            /*
-            move: Transition {
-                NumberAnimation {
-                    properties: "x,y"
-                    duration: 300
-                    easing.type: Easing.OutCubic
-                }
-            }*/
             Repeater {
 
                 id: rep
@@ -168,10 +151,56 @@ GroupBox {
 
                 ColumnLayout {
 
+                    id: entry
+
+                    property bool proposedVisible: control.fold ? index < grid.columns : true
+                    property real dummy: 0
+
                     width: grid.minWidth
                     spacing: 10
-                    visible: control.fold ? index < grid.columns : true
                     opacity: 0
+
+                    onProposedVisibleChanged: {
+                        if (!entry.proposedVisible) {
+                            removeAnimation.start()
+                        } else {
+                            entry.visible = true
+                        }
+                    }
+
+                    SequentialAnimation {
+                        id: removeAnimation
+                        alwaysRunToEnd: true
+                        PropertyAction {
+                            id: implicitHeightAction
+                            target: entry
+                            property: "implicitHeight"
+                            value: 0
+                        }
+                        ParallelAnimation {
+                            NumberAnimation {
+                                target: entry
+                                property: "scale"
+                                from: 1
+                                to: 0.9
+                                duration: 200
+                                easing.type: Easing.OutQuad
+                            }
+                            NumberAnimation {
+                                target: entry
+                                property: "opacity"
+                                from: 1
+                                to: 0
+                                duration: 200
+                                easing.type: Easing.OutQuad
+                            }
+                        }
+                        PropertyAction {
+                            target: entry
+                            property: "visible"
+                            value: false
+                        }
+                    }
 
                     RowLayout {
 
@@ -191,7 +220,17 @@ GroupBox {
                             Layout.alignment: Qt.AlignTop
                             Layout.topMargin: -10
                             onClicked: {
-                                messageModel.remove(index)
+                                if (entry.visible) {
+                                    removeAnimation.onFinished.connect(() => {
+                                                                           messageModel.remove(index)
+                                                                       })
+                                    if (control.fold) {
+                                        implicitHeightAction.property = ""
+                                    }
+                                    removeAnimation.start()
+                                } else {
+                                    messageModel.remove(index)
+                                }
                             }
                         }
                     }

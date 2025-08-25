@@ -54,17 +54,15 @@ function createItem(url, parent, options) {
         console.warn("Error creating Item: " + component.errorString())
 }
 
-var timer
-
 function callDelayed(functor, msDelay) {
 
     if (functor) {
         if (msDelay == null)
             msDelay = 0
 
-        timer = Qt.createQmlObject(
-                    'import QtQml; Timer {running: false; repeat: false; interval: '
-                    + msDelay + '}', Qt.application)
+        let timer = Qt.createQmlObject(
+            'import QtQml; Timer {running: false; repeat: false; interval: '
+            + msDelay + '}', Qt.application)
         timer.triggered.connect(function () {
             functor()
             timer.destroy()

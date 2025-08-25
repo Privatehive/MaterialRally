@@ -1,0 +1,36 @@
+include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
+
+project     = Test
+description = Sample QDoc project
+version = 1.0.0
+navigation.hometitle = "Material Rally version"
+buildversion = "Material Rally Reference Documentation"
+
+headers.fileextensions  = "*.h *.hpp"
+sources.fileextensions  = "*.cpp *.qml *.qdoc"
+
+headerdirs += ../../
+sourcedirs += ../../
+imagedirs  += ../images
+
+HTML.footer =
+
+qhp.projects            = MaterialRally
+qhp.MaterialRally.file           = materialrally.qhp
+qhp.MaterialRally.namespace      = org.qt-project.materialrally.1.0.0
+qhp.MaterialRally.virtualFolder  = MaterialRally
+qhp.MaterialRally.indexTitle     = Material Rally
+qhp.MaterialRally.indexRoot      =
+qhp.MaterialRally.subprojects    = qmltypes classes
+qhp.MaterialRally.subprojects.classes.title = C++ API
+qhp.MaterialRally.subprojects.classes.indexTitle = Material Rally C++ API
+qhp.MaterialRally.subprojects.classes.selectors = class
+qhp.MaterialRally.subprojects.classes.sortPages = true
+qhp.MaterialRally.subprojects.qmltypes.title = QML Types
+qhp.MaterialRally.subprojects.qmltypes.indexTitle = Material Rally QML Types
+qhp.MaterialRally.subprojects.qmltypes.selectors = qmlclass
+qhp.MaterialRally.subprojects.qmltypes.sortPages = true
+
+navigation.landingpage = "Material Rally"
+navigation.cppclassespage = "Material Rally C++ API"
+navigation.qmltypespage = "Material Rally QML Types"

@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Controls
-import "./private"
+import "./private" as RallyPrivate
 
-ScrollablePageBase {
+RallyPrivate.ScrollablePageBase {
 
     padding: 10
     leftPadding: 14

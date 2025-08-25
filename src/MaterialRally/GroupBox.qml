@@ -2,12 +2,12 @@ import QtQuick
 import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
 import QtQuick.Layouts
+import MaterialRally
 import "helper.js" as Helper
 
 T.GroupBox {
 
     id: control
-
     property BusyAction mainAction
     property string infoText: ""
     property alias icon: iconLabel.icon
@@ -33,8 +33,8 @@ T.GroupBox {
 
     Behavior on implicitHeight {
         NumberAnimation {
-            duration: 300
-            easing.type: Easing.OutCubic
+            duration: 200
+            easing.type: Easing.OutQuad
         }
     }
 
@@ -71,9 +71,7 @@ T.GroupBox {
                     text: control.title
                     elide: Text.ElideRight
                     anchors.verticalCenter: parent.verticalCenter
-                    width: Math.min(
-                               implicitWidth,
-                               parent.width - (icon.visible ? icon.width : 0) - 6)
+                    width: Math.min(implicitWidth, parent.width - (icon.visible ? icon.width : 0) - 6)
                 }
 
                 Icon {
@@ -89,10 +87,9 @@ T.GroupBox {
                     MouseArea {
                         anchors.fill: parent
                         onClicked: {
-                            const dialog = Helper.createDialog(
-                                             "InfoDialog.qml", control, {
-                                                 "text": control.infoText
-                                             })
+                            const dialog = Helper.createDialog("InfoDialog.qml", control, {
+                                                                   "text": control.infoText
+                                                               })
                         }
                     }
                 }
@@ -105,7 +102,7 @@ T.GroupBox {
                 leftPadding: 0
                 rightPadding: 0
                 visible: action && !action.checkable
-                enabled: control.mainAction ? !control.mainAction.busy : false
+                enabled: control.mainAction ? !control.mainAction.delayedBusy : false
                 implicitHeight: parent.height
 
                 font.capitalization: Font.AllUppercase
@@ -179,7 +176,7 @@ T.GroupBox {
                 rightPadding: 0
                 checked: true
                 visible: action && action.checkable
-                enabled: control.mainAction ? !control.mainAction.busy : false
+                enabled: control.mainAction ? !control.mainAction.delayedBusy : false
                 scale: 0.75
             }
         }
@@ -195,7 +192,7 @@ T.GroupBox {
 
                 anchors.fill: parent
 
-                visible: control.mainAction ? control.mainAction.busy : false
+                visible: control.mainAction ? control.mainAction.delayedBusy : false
 
                 indeterminate: true
 

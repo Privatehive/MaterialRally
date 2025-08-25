@@ -14,7 +14,7 @@ T.Dialog {
     parent: T.Overlay.overlay
     focus: true
     anchors.centerIn: parent
-    width: Math.min(Math.max(parent.width / 2, 200), 500)
+    width: Math.min(Math.max(parent.width / 1.5, 200), 500)
 
     closePolicy: T.Popup.CloseOnEscape
 
@@ -157,7 +157,8 @@ T.Dialog {
         }
     }
 
-    contentItem: T.Label {
+    contentItem: T.Label
+    {
         id: label
         font.pixelSize: 16
         wrapMode: Text.WordWrap

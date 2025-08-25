@@ -1,8 +1,8 @@
-import QtQuick 2.12
-import QtQuick.Controls 2.12 as T
-import QtQuick.Controls.impl 2.12
-import QtQuick.Controls.Material 2.12
-import QtQuick.Controls.Material.impl 2.12
+import QtQuick
+import QtQuick.Controls as T
+import QtQuick.Controls.impl
+import QtQuick.Controls.Material
+import QtQuick.Controls.Material.impl
 
 T.TextArea {
 
@@ -24,8 +24,9 @@ T.TextArea {
         implicitWidth: 250
         implicitHeight: control.Material.buttonHeight
         color: "#26282f"
-        border.color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g, control.Material.accentColor.b, control.Material.accentColor.a * borderOpacity)
-        border.width: 1//control.activeFocus && !control.readOnly ? 1 : 0
+        border.color: Qt.rgba(control.Material.accentColor.r, control.Material.accentColor.g,
+                              control.Material.accentColor.b, control.Material.accentColor.a * borderOpacity)
+        border.width: 1 //control.activeFocus && !control.readOnly ? 1 : 0
 
         Behavior on borderOpacity {
             SmoothedAnimation {

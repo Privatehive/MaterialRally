@@ -1,5 +1,6 @@
 import QtQuick
 import QtQuick.Controls
+import MaterialRally as Rally
 
 Row {
 
@@ -48,7 +49,15 @@ Row {
     ButtonGroup {
         id: group
         exclusive: true
-        buttons: control.children
+        buttons: {
+            let addButtons = []
+            for (var i = 0; i < control.children.length; i++) {
+                if (rallyInstanceOf(control.children[i], Rally.TabButtonFolding)) {
+                    addButtons.push(control.children[i])
+                }
+            }
+            return addButtons
+        }
 
         // The max. expanded width of the row of the buttons
         property real maxWidth: 0
@@ -83,8 +92,7 @@ Row {
             for (var key in group.buttons) {
                 let button = buttons[key]
                 if (button.hasOwnProperty("proposedWidth")) {
-                    button.onProposedWidthChanged.disconnect(
-                                group.updateMaxWidth)
+                    button.onProposedWidthChanged.disconnect(group.updateMaxWidth)
                     button.onProposedWidthChanged.connect(group.updateMaxWidth)
                     if (button.hasOwnProperty("expandWidth")) {
                         button.expandWidth = Qt.binding(function () {

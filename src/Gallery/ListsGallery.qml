@@ -3,7 +3,7 @@ import QtQml
 import QtQuick.Controls
 import QtQuick.Layouts
 import QtQuick.Controls.Material
-import MaterialRally as Controls
+import MaterialRally as Rally
 
 Pane {
 
@@ -11,11 +11,11 @@ Pane {
 
         anchors.fill: parent
 
-        Controls.Icon {
+        Rally.Icon {
             icon.name: "list-box"
         }
 
-        Controls.GroupBox {
+        Rally.GroupBox {
             title: qsTr("Scaling test")
             infoText: qsTr("This white rectangle should have a width and height of 1 cm")
 
@@ -25,7 +25,7 @@ Pane {
             }
         }
 
-        Controls.GroupBox {
+        Rally.GroupBox {
             title: qsTr("Scaling test")
             infoText: qsTr("This white rectangle should have a width and height of 1 cm")
 
@@ -35,7 +35,7 @@ Pane {
             }
         }
 
-        Controls.GroupBox {
+        Rally.GroupBox {
 
             title: qsTr("Action")
             Layout.fillWidth: true
@@ -48,7 +48,7 @@ Pane {
                 onTriggered: act.busy = false
             }
 
-            mainAction: Controls.BusyAction {
+            mainAction: Rally.BusyAction {
                 id: act
                 text: qsTr("Start Action")
                 icon.source: "qrc:/icons/material_private/48x48/information-outline.svg"
@@ -63,25 +63,22 @@ Pane {
             }
         }
 
-        Controls.Button {
+        Rally.Button {
             text: qsTr("Add Info Message")
-            onClicked: inlineMessage.pushMessage("Info Message", "info",
-                                                 "Info Message")
+            onClicked: inlineMessage.pushMessage("Info Message", "info", "Info Message")
         }
 
-        Controls.Button {
+        Rally.Button {
             text: qsTr("Add Warning Message")
-            onClicked: inlineMessage.pushMessage("Warning Message", "warning",
-                                                 "Warning Message")
+            onClicked: inlineMessage.pushMessage("Warning Message", "warning", "Warning Message")
         }
 
-        Controls.Button {
+        Rally.Button {
             text: qsTr("Add Error Message")
-            onClicked: inlineMessage.pushMessage("Error Message", "error",
-                                                 "Error Message")
+            onClicked: inlineMessage.pushMessage("Error Message", "error", "Error Message")
         }
 
-        Controls.InlineMessage {
+        Rally.InlineMessage {
 
             id: inlineMessage
             title: qsTr("Messages")
@@ -89,7 +86,28 @@ Pane {
             text: qsTr("asdfasdfasf")
         }
 
-        Controls.Button {
+        Rally.Button {
+            text: qsTr("Open Popup")
+            onClicked: popup.open()
+        }
+
+        Rally.Button {
+            text: qsTr("Open Popup")
+            onClicked: popup.open()
+        }
+        Rally.Button {
+            text: qsTr("Open Popup")
+            onClicked: popup.open()
+        }
+        Rally.Button {
+            text: qsTr("Open Popup")
+            onClicked: popup.open()
+        }
+        Rally.Button {
+            text: qsTr("Open Popup")
+            onClicked: popup.open()
+        }
+        Rally.Button {
             text: qsTr("Open Popup")
             onClicked: popup.open()
         }

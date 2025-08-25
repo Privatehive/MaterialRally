@@ -72,6 +72,8 @@ qt_add_qml_module(MaterialRally
         MaterialRally/private/RefreshableScrollView.qml
         MaterialRally/private/ScrollablePageBase.qml
         MaterialRally/private/ScrollViewBase.qml
+        MaterialRally/private/SizeLabel.qml
+        MaterialRally/private/ReloadIndicator.qml
 
         RESOURCES
         fonts/RobotoMono.ttf
@@ -142,6 +144,9 @@ if (FEATURE_GALLERY_APP)
             button-cursor
             list-box
     )
+
+    install_app(RallyGallery)
+
 endif ()
 
 install_qml_module(MaterialRally)

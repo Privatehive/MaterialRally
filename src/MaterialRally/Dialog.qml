@@ -6,11 +6,10 @@ import MaterialRally
 T.Dialog {
 
     id: control
-
-    signal backButtonClicked
-
     readonly property real yStart: 80
     property alias busy: progressBar.visible
+
+    signal backButtonClicked
 
     T.Material.elevation: 0
     T.Material.roundedScale: T.Material.NotRounded
@@ -310,8 +309,7 @@ T.Dialog {
                         target: control.background
                         property: "color"
                         duration: 230
-                        from: Qt.lighter(control.T.Material.backgroundColor,
-                                         1.2)
+                        from: Qt.lighter(control.T.Material.backgroundColor, 1.2)
                         to: control.T.Material.backgroundColor
                         easing.type: Easing.OutCubic
                     }

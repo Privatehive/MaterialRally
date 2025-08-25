@@ -1,0 +1,20 @@
+/*!
+    \qmlmodule MaterialRally
+    \title Material Rally QML Types
+    \brief Material Rally QML Types
+    \ingroup qmlmodules
+
+    You can import this module using the following statement:
+
+    \qml
+    import MaterialRally as Rally
+    \endqml
+
+    \note
+    You should import the Material Rally QML module into its own namespace (e.g. Rally) because it uses the same names as the official Qt Quick Controls.
+    Thus you can use both besides each other: the official Quick Controls and the Material Rally Controls.
+
+    \section1 QML Types
+    \generatelist {qmltypesbymodule MaterialRally}
+    \noautolist
+*/

@@ -1,0 +1,13 @@
+/*!
+    \module MaterialRally
+    \keyword Material Rally C++ API
+    \title Material Rally C++ API
+    \ingroup modules
+
+    \brief Provides macros and functions for tests.
+
+    The C++ macros and functions can be included into your application using
+    the following include statement:
+
+    \sa {Executing C++ Before QML Tests}
+*/

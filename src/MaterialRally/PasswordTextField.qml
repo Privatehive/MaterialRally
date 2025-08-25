@@ -1,11 +1,11 @@
 import QtQuick
 import QtQuick.Controls
-import MaterialRally as Controls
+import MaterialRally as Rally
 
-Controls.TextField {
+Rally.TextField {
 
     echoMode: revealButton.checked ? TextInput.Normal : TextInput.Password
-    font.family: "Roboto Mono"
+    inputMethodHints: Qt.ImhSensitiveData | Qt.ImhHiddenText | Qt.ImhNoAutoUppercase | Qt.ImhNoPredictiveText
     passwordMaskDelay: 500
     passwordCharacter: "●"
 

@@ -1,0 +1,16 @@
+/*!
+    \page index.html
+    \since 6.4
+    \title Material Rally
+    \brief Provides a qml Module Material Rally.
+
+    Material Rally
+
+    \section1 Overview
+
+    \section1 Reference
+    \list
+    \li \l{Material Rally C++ API}{C++ Classes}
+    \li \l{Material Rally QML Types}{QML Types}
+    \endlist
+*/

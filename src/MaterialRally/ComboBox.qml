@@ -7,20 +7,17 @@ import QtQuick.Controls.Material.impl
 T.ComboBox {
 
     id: control
+    property string placeholderText: ""
+    property color placeholderTextColor: control.enabled
+                                         && control.activeFocus ? T.Material.accentColor : T.Material.hintTextColor
 
     T.Material.containerStyle: Material.Filled
     selectTextByMouse: true
     activeFocusOnTab: true
 
-    property string placeholderText: ""
-    property color placeholderTextColor: control.enabled
-                                         && control.activeFocus ? T.Material.accentColor : T.Material.hintTextColor
-
-    topPadding: control.T.Material.containerStyle
-                === Material.Filled ? placeholderText.length > 0
-                                      && (activeFocus
-                                          || control.contentItem.length
-                                          > 0) ? placeholder.largestHeight : 0 : 0
+    topPadding: control.T.Material.containerStyle === Material.Filled ? placeholderText.length > 0
+                                                                        && (activeFocus || control.contentItem.length
+                                                                            > 0) ? placeholder.largestHeight : 0 : 0
 
     Component.onCompleted: {
 
@@ -61,16 +58,14 @@ T.ComboBox {
     FloatingPlaceholderText {
         id: placeholder
         x: control.contentItem.leftPadding
-        width: control.contentItem.width - (control.contentItem.leftPadding
-                                            + control.contentItem.rightPadding)
+        width: control.contentItem.width - (control.contentItem.leftPadding + control.contentItem.rightPadding)
         text: control.placeholderText
         font: control.font
         color: control.placeholderTextColor
         elide: Text.ElideRight
 
         filled: control.T.Material.containerStyle === Material.Filled
-        verticalPadding: control.T.Material.containerStyle
-                         === Material.Filled ? 14 : 0 // control.Material.textFieldVerticalPadding
+        verticalPadding: control.T.Material.containerStyle === Material.Filled ? 14 : 0 // control.Material.textFieldVerticalPadding
         controlHasActiveFocus: control.activeFocus
         controlHasText: control.contentItem.length > 0
         controlImplicitBackgroundHeight: control.contentItem.implicitBackgroundHeight
@@ -88,9 +83,7 @@ T.ComboBox {
         focusedOutlineColor: control.T.Material.accentColor
         // When the control's size is set larger than its implicit size, use whatever size is smaller
         // so that the gap isn't too big.
-        placeholderTextWidth: Math.min(
-                                  placeholder.width,
-                                  placeholder.implicitWidth) * placeholder.scale
+        placeholderTextWidth: Math.min(placeholder.width, placeholder.implicitWidth) * placeholder.scale
         //placeholderTextHAlign: control.effectiveHorizontalAlignment
         controlHasActiveFocus: control.activeFocus
         controlHasText: control.contentItem.length > 0
