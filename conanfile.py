@@ -54,7 +54,7 @@ class MaterialRallyConan(ConanFile):
     no_copy_source = False
 
     def validate(self):
-        valid_os = ["Windows", "Linux", "Android"]
+        valid_os = ["Windows", "Linux", "Android", "Macos"]
         if str(self.settings.os) not in valid_os:
             raise ConanInvalidConfiguration(
                 f"{self.name} {self.version} is only supported for the following operating systems: {valid_os}")
@@ -63,10 +63,12 @@ class MaterialRallyConan(ConanFile):
             raise ConanInvalidConfiguration(
                 f"{self.name} {self.version} is only supported for the following architectures on {self.settings.os}: {valid_arch}")
         if self.dependencies["qt"].options.get_safe("config", "none") != 'host':
-            if not self.dependencies["qt"].options.qtbase:
-                raise ConanInvalidConfiguration("qt qtbase options is required")
             if not self.dependencies["qt"].options.GUI:
                 raise ConanInvalidConfiguration("qt GUI options is required")
+            if self.dependencies["qt"].options.opengl == "no":
+                raise ConanInvalidConfiguration("qt opengl options must contain a value != no")
+            if not self.dependencies["qt"].options.qtbase:
+                raise ConanInvalidConfiguration("qt qtbase options is required")
             if not self.dependencies["qt"].options.qtdeclarative:
                 raise ConanInvalidConfiguration("qt qtdeclarative options is required")
             if not self.dependencies["qt"].options.qtshadertools:
@@ -75,8 +77,12 @@ class MaterialRallyConan(ConanFile):
                 raise ConanInvalidConfiguration("qt qtsvg options is required")
             if not self.dependencies["qt"].options.qt5compat:
                 raise ConanInvalidConfiguration("qt qt5compat options is required")
-            if self.dependencies["qt"].options.opengl == "no":
-                raise ConanInvalidConfiguration("qt opengl options must contain a value != no")
+            if not self.dependencies["qt"].options.qttools:
+                raise ConanInvalidConfiguration("qt qttools options is required")
+            if not self.dependencies["qt"].options.qtdoc:
+                raise ConanInvalidConfiguration("qt qtdoc options is required")
+            if not self.dependencies["qt"].options.quick2style == "material":
+                raise ConanInvalidConfiguration("qt quick2style options must contain value == material")
 
     def generate(self):
         ms = VirtualBuildEnv(self)
