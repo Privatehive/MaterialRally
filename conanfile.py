@@ -32,10 +32,11 @@ class MaterialRallyConan(ConanFile):
     exports_sources = ["info.json", "LICENSE", "*.txt", "doc/*", "src/*", "CMake/*"]
     # ---Binary model---
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False], "lto": [True, False], "testapp": [True, False]}
+    options = {"shared": [True, False], "fPIC": [True, False], "lto": [True, False], "doc": [True, False], "testapp": [True, False]}
     default_options = {"shared": True,
                        "fPIC": True,
                        "lto": False,
+                       "doc": False,
                        "testapp": False,
                        "qtappbase/*:qml": True,
                        "qt/*:GUI": True,
@@ -45,8 +46,6 @@ class MaterialRallyConan(ConanFile):
                        "qt/*:qtshadertools": True,
                        "qt/*:qtsvg": True,
                        "qt/*:qt5compat": True,
-                       "qt/*:qttools": True,
-                       "qt/*:qtdoc": True,
                        "qt/*:quick2style": "material"}
     # ---Build---
     generators = []
@@ -77,12 +76,13 @@ class MaterialRallyConan(ConanFile):
                 raise ConanInvalidConfiguration("qt qtsvg options is required")
             if not self.dependencies["qt"].options.qt5compat:
                 raise ConanInvalidConfiguration("qt qt5compat options is required")
-            if not self.dependencies["qt"].options.qttools:
-                raise ConanInvalidConfiguration("qt qttools options is required")
-            if not self.dependencies["qt"].options.qtdoc:
-                raise ConanInvalidConfiguration("qt qtdoc options is required")
             if not self.dependencies["qt"].options.quick2style == "material":
                 raise ConanInvalidConfiguration("qt quick2style options must contain value == material")
+
+    def configure(self):
+        if self.options.doc:
+            self.options["qt"].qtdoc = True
+            self.options["qt"].qttools = True
 
     def generate(self):
         ms = VirtualBuildEnv(self)
@@ -97,8 +97,8 @@ class MaterialRallyConan(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
-        self.run("qdoc --outputdir %s ./doc/config/materialrally.qdocconf" % os.path.join(self.package_folder, 'doc'),
-                 cwd=self.source_folder)
+        if self.options.doc:
+            self.run("qdoc --outputdir %s ./doc/config/materialrally.qdocconf" % os.path.join(self.package_folder, 'doc'), cwd=self.source_folder)
 
     def package(self):
         cmake = CMake(self)
