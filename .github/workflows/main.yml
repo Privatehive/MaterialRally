@@ -32,6 +32,7 @@ jobs:
     name: "Documentation"
     uses: Privatehive/conan-workflows/.github/workflows/createPackage.yml@master
     with:
+      name: "QtDoc"
       image: "ubuntu-22.04"
       conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
       conan_options: "materialrally/*:doc=True"
