@@ -28,15 +28,6 @@ jobs:
       image: "macos-15"
       conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
 
-  build_doc:
-    name: "Documentation"
-    uses: Privatehive/conan-workflows/.github/workflows/createPackage.yml@master
-    with:
-      name: "QtDoc"
-      image: "ubuntu-22.04"
-      conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
-      conan_options: "materialrally/*:doc=True"
-
   build_linux_qt_host:
     name: "Linux Qt Host"
     uses: Privatehive/conan-workflows/.github/workflows/createPackage.yml@master
@@ -111,12 +102,56 @@ jobs:
       conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
       import_conan_cache: true
 
+  build_doc:
+    name: "Documentation"
+    uses: Privatehive/conan-workflows/.github/workflows/createPackage.yml@master
+    if: ${{ github.ref == 'refs/heads/master' }}
+    with:
+      name: "Build"
+      image: "ubuntu-22.04"
+      conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
+      conan_options: "materialrally/*:doc=True"
+      conan_deploy_artifacts: true
+
+  bundle_doc:
+    name: "Documentation"
+    needs: [ build_doc ]
+    if: ${{ success() && github.ref == 'refs/heads/master' }}
+    runs-on: "ubuntu-22.04"
+    steps:
+      - name: "Download conan artifact"
+        uses: actions/download-artifact@v5
+        with:
+          name: conan-package-artifacts
+          path: /tmp/conan-package-artifacts
+      - name: "Bundle"
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: /tmp/conan-package-artifacts/doc/
+
+  deploy_doc:
+    name: "Documentation"
+    needs: [ bundle_doc ]
+    if: ${{ success() && github.ref == 'refs/heads/master' }}
+    runs-on: "ubuntu-22.04"
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }
+    steps:
+      - name: "Upload"
+        id: deployment
+        uses: actions/deploy-pages@v4
+
   upload_recipe:
     name: "Finalize"
     uses: Privatehive/conan-workflows/.github/workflows/uploadRecipe.yml@master
-    needs: [ build_linux_x86_64, build_windows_x86_64, build_macos_armv8, build_linux_rpi_armv6, build_android_x86, build_android_x86_64, build_android_armv7, build_android_armv8, build_doc ]
+    needs: [ build_linux_x86_64, build_windows_x86_64, build_macos_armv8, build_linux_rpi_armv6, build_android_x86, build_android_x86_64, build_android_armv7, build_android_armv8 ]
     if: ${{ success() }}
     secrets: inherit
     with:
       publish_property: ${{ github.ref == 'refs/heads/master' }}
       conan_upload_remote: https://conan.privatehive.de/artifactory/api/conan/public-conan
+
