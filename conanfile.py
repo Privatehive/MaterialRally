@@ -6,6 +6,7 @@ from conan import ConanFile
 from conan.tools.cmake import CMake, CMakeToolchain
 from conan.errors import ConanInvalidConfiguration
 from conan.tools.env import VirtualBuildEnv
+from conan.tools.files import copy
 
 required_conan_version = ">=2.0"
 
@@ -103,6 +104,9 @@ class MaterialRallyConan(ConanFile):
     def package(self):
         cmake = CMake(self)
         cmake.install()
+
+    def deploy(self):
+        copy(self, "*", src=os.path.join(self.package_folder, 'doc'), dst=self.deploy_folder)
 
     def package_info(self):
         self.cpp_info.set_property("cmake_find_mode", "none")

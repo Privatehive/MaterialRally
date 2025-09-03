@@ -103,18 +103,17 @@ jobs:
       import_conan_cache: true
 
   build_doc:
-    name: "Documentation"
+    name: "Documentation Build"
     uses: Privatehive/conan-workflows/.github/workflows/createPackage.yml@master
     if: ${{ github.ref == 'refs/heads/master' }}
     with:
-      name: "Build"
       image: "ubuntu-22.04"
       conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
       conan_options: "materialrally/*:doc=True"
       conan_deploy_artifacts: true
 
   bundle_doc:
-    name: "Documentation"
+    name: "Documentation Prepare"
     needs: [ build_doc ]
     if: ${{ success() && github.ref == 'refs/heads/master' }}
     runs-on: "ubuntu-22.04"
@@ -127,10 +126,10 @@ jobs:
       - name: "Bundle"
         uses: actions/upload-pages-artifact@v3
         with:
-          path: /tmp/conan-package-artifacts/doc/
+          path: /tmp/conan-package-artifacts/
 
   deploy_doc:
-    name: "Documentation"
+    name: "Documentation Upload"
     needs: [ bundle_doc ]
     if: ${{ success() && github.ref == 'refs/heads/master' }}
     runs-on: "ubuntu-22.04"
