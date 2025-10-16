@@ -111,6 +111,7 @@ jobs:
       conan_remotes: https://conan.privatehive.de/artifactory/api/conan/public-conan
       conan_options: "materialrally/*:doc=True"
       conan_deploy_artifacts: true
+      conan_artifact_name: "conan-package-artifacts"
 
   bundle_doc:
     name: "Documentation Prepare"
