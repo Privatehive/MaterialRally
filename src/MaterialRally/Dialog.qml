@@ -25,6 +25,20 @@ T.Dialog {
 
     padding: 0
 
+    Component.onCompleted: {
+        if (control.SafeArea) {
+            control.leftPadding = Qt.binding(() => {
+                                                 return control.SafeArea.margins.left
+                                             })
+            control.rightPadding = Qt.binding(() => {
+                                                  return control.SafeArea.margins.right
+                                              })
+            control.bottomPadding = Qt.binding(() => {
+                                                   return control.SafeArea.margins.bottom
+                                               })
+        }
+    }
+
     function openWithAnimOffset(yOffset) {
 
         if (yOffset)
@@ -36,11 +50,13 @@ T.Dialog {
 
     T.Overlay.modal: Item {
 
+        id: modalOverlayRoot
+
+        anchors.fill: parent
+
         onOpacityChanged: {
             opacity = 1 // prevent the overlay from beeing hidden if dialog is getting closed
         }
-
-        anchors.fill: parent
 
         Item {
 
@@ -86,28 +102,11 @@ T.Dialog {
             ]
 
             ShaderEffectSource {
-                id: headerBlur
-                width: control.RootItem.header ? control.RootItem.header.width : 0
-                height: control.RootItem.header ? control.RootItem.header.height : 0
-                sourceItem: control.RootItem.header ? control.RootItem.header : null
-                hideSource: true
-            }
-
-            ShaderEffectSource {
                 id: mainBlur
                 width: control.RootItem.contentItem ? control.RootItem.contentItem.width : 0
                 height: control.RootItem.contentItem ? control.RootItem.contentItem.height : 0
                 sourceItem: control.RootItem.contentItem ? control.RootItem.contentItem : null
-                anchors.top: headerBlur.bottom
-                hideSource: true
-            }
-
-            ShaderEffectSource {
-                id: footerBlur
-                width: control.RootItem.footer ? control.RootItem.footer.width : 0
-                height: control.RootItem.footer ? control.RootItem.footer.height : 0
-                sourceItem: control.RootItem.footer ? control.RootItem.footer : null
-                anchors.top: mainBlur.bottom
+                anchors.centerIn: parent
                 hideSource: true
             }
         }
