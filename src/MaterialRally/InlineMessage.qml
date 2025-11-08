@@ -11,7 +11,8 @@ GroupBox {
 
     property bool fold: true
     property string text: ""
-    property alias count: messageModel.count
+    readonly property alias count: messageModel.count
+    property int maxCount: 1000
 
     // severity one of "error", "warning", "info"
     function pushMessage(message, severity, title) {
@@ -28,21 +29,23 @@ GroupBox {
             severity = "info"
         }
 
+        const currentCount = messageModel.count + 1
+
         messageModel.insert(0, {
                                 "title": title,
                                 "severity": severity,
                                 "displayMessage": message
                             })
-        //propertyAnimIn.start()
+
+        if (currentCount > control.maxCount) {
+
+            messageModel.remove(currentCount - 1)
+        }
     }
 
     function clear() {
 
         messageModel.clear()
-    }
-
-    function hide() {//propertyAnimIn.stop()
-        //propertyAnimOut.start()
     }
 
     readonly property BusyAction defaultAction: BusyAction {
@@ -72,15 +75,15 @@ GroupBox {
                     break
                 case "warning":
                     control.icon.source = "qrc:/icons/material_private/48x48/alert-outline.svg"
-                    control.icon.color = control.T.Material.color(T.Material.Yellow)
+                    control.icon.color = control.T.Material.color(T.Material.Amber)
                     break
                 case "info":
                     control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
-                    control.icon.color = control.T.Material.accentColor
+                    control.icon.color = control.T.Material.color(T.Material.BlueGrey)
                     break
                 default:
                     control.icon.source = "qrc:/icons/material_private/48x48/information-outline.svg"
-                    control.icon.color = control.T.Material.accentColor
+                    control.icon.color = control.T.Material.color(T.Material.BlueGrey)
                 }
             } else {
                 control.title = ""

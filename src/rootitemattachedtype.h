@@ -1,5 +1,7 @@
+#pragma once
 #include "MaterialRallyExport.h"
-#include <QObject>
+#include <QAtomicInteger>
+#include <QMutex>
 #include <QQuickItem>
 
 
@@ -8,48 +10,48 @@ class InputEventFilter : public QObject {
 	Q_OBJECT
 
  public:
-	explicit InputEventFilter(QObject *parent = nullptr) : QObject(parent) {}
+	explicit InputEventFilter(bool initialValue, QObject *parent = nullptr) : QObject(parent), mIsTouch(initialValue) {}
+
+	bool isTouch() const { return mIsTouch; }
 
  signals:
 	void touchInputChanged(bool isTouch);
 
  protected:
 	bool eventFilter(QObject *obj, QEvent *event) override;
+
+ private:
+	bool mIsTouch;
 };
 
 class MATERIALRALLY_EXPORT RootItemAttachedType : public QObject {
 
 	Q_OBJECT
 	Q_PROPERTY(QQuickItem *contentItem READ getContentItem WRITE setContentItem NOTIFY contentItemChanged)
-	Q_PROPERTY(QQuickItem *header READ getHeader WRITE setHeader NOTIFY headerChanged)
-	Q_PROPERTY(QQuickItem *footer READ getFooter WRITE setFooter NOTIFY footerChanged)
+	Q_PROPERTY(QObject *root READ getRoot WRITE setRoot NOTIFY rootChanged)
 	Q_PROPERTY(bool isTouchInput READ isTouchInput NOTIFY inputChanged)
 	Q_PROPERTY(bool isMouseInput READ isMouseInput NOTIFY inputChanged)
 	QML_ANONYMOUS
 
  public:
 	explicit RootItemAttachedType(QObject *parent = nullptr);
-	QQuickItem *getContentItem();
+	static QQuickItem *getContentItem();
 	void setContentItem(QQuickItem *root);
-	QQuickItem *getHeader();
-	void setHeader(QQuickItem *root);
-	QQuickItem *getFooter();
-	void setFooter(QQuickItem *root);
-	bool isTouchInput() const;
-	bool isMouseInput() const;
+	static QObject *getRoot();
+	void setRoot(QObject *root);
+	static bool isTouchInput();
+	static bool isMouseInput();
 
  signals:
-	void contentItemChanged(QQuickItem *root);
-	void headerChanged(QQuickItem *root);
-	void footerChanged(QQuickItem *root);
+	void contentItemChanged(QQuickItem *item);
+	void rootChanged(QObject *root);
 	void inputChanged();
 
  private:
 	static QQuickItem *mpContentItem;
-	static QQuickItem *mpHeader;
-	static QQuickItem *mpFooter;
+	static QObject *mpRoot;
 	static InputEventFilter *mpInputDetector;
-	static bool mTouchInput;
+	static QMutex mMutex;
 };
 
 class RootItem : public QObject {

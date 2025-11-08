@@ -33,7 +33,8 @@ class MaterialRallyConan(ConanFile):
     exports_sources = ["info.json", "LICENSE", "*.txt", "doc/*", "src/*", "CMake/*"]
     # ---Binary model---
     settings = "os", "compiler", "build_type", "arch"
-    options = {"shared": [True, False], "fPIC": [True, False], "lto": [True, False], "doc": [True, False], "testapp": [True, False]}
+    options = {"shared": [True, False], "fPIC": [True, False], "lto": [True, False], "doc": [True, False],
+               "testapp": [True, False]}
     default_options = {"shared": True,
                        "fPIC": True,
                        "lto": False,
@@ -98,8 +99,12 @@ class MaterialRallyConan(ConanFile):
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
+        if self.settings.os == "Android":
+            cmake.build(target="aab")
         if self.options.doc:
-            self.run("qdoc --outputdir %s ./doc/config/materialrally.qdocconf" % os.path.join(self.package_folder, 'doc'), cwd=self.source_folder)
+            self.run(
+                "qdoc --outputdir %s ./doc/config/materialrally.qdocconf" % os.path.join(self.package_folder, 'doc'),
+                cwd=self.source_folder)
 
     def package(self):
         cmake = CMake(self)

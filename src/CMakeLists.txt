@@ -34,10 +34,6 @@ qt_add_qml_module(MaterialRally
         SOURCES
         rootitemattachedtype.h
         rootitemattachedtype.cpp
-        settings.h
-        settings.cpp
-        wheelhandler.h
-        wheelhandler.cpp
         units.h
         units.cpp
 
@@ -67,6 +63,8 @@ qt_add_qml_module(MaterialRally
         MaterialRally/TextField.qml
         MaterialRally/ToolBar.qml
         MaterialRally/ToolButton.qml
+        MaterialRally/SnackBar.qml
+        MaterialRally/CollapsibleControl.qml
         MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
         MaterialRally/Helper.qml
         MaterialRally/private/RefreshableScrollView.qml
@@ -95,17 +93,17 @@ add_material_icon_theme_resource(MaterialRally THEME_NAME material_private ICONS
         eye
         eye-off
         chevron-right
+        close
 )
 
 qt_add_resources(MaterialRally QtQuickControls2 FILES qtquickcontrols2.conf)
 
 generate_export_header(MaterialRally EXPORT_FILE_NAME MaterialRallyExport.h)
 target_mark_public_header(MaterialRally
-        settings.h
         units.h
         ${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyExport.h
 )
-target_link_libraries(MaterialRally PUBLIC Qt6::Gui PUBLIC Qt6::Quick PUBLIC Qt6::Qml PUBLIC Qt6::QuickControls2 PRIVATE Qt6::GuiPrivate)
+target_link_libraries(MaterialRally PUBLIC Qt6::Gui PUBLIC Qt6::Quick PUBLIC Qt6::Qml PUBLIC Qt6::QuickControls2)
 target_include_directories(MaterialRally PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}> $<INSTALL_INTERFACE:include>)
 target_include_directories(MaterialRally PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_BINARY_DIR}> $<INSTALL_INTERFACE:include>)
 target_compile_definitions(MaterialRally PRIVATE KIRIGAMI2_VERSION_STRING="1.0.0")

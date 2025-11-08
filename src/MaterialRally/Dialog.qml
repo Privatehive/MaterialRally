@@ -6,7 +6,7 @@ import MaterialRally
 T.Dialog {
 
     id: control
-    readonly property real yStart: 80
+
     property alias busy: progressBar.visible
 
     signal backButtonClicked
@@ -14,7 +14,6 @@ T.Dialog {
     T.Material.elevation: 0
     T.Material.roundedScale: T.Material.NotRounded
 
-    topPadding: yStart
     enabled: !busy
 
     focus: true
@@ -23,21 +22,8 @@ T.Dialog {
     parent: T.Overlay.overlay
     width: parent.width
 
+    margins: 0
     padding: 0
-
-    Component.onCompleted: {
-        if (control.SafeArea) {
-            control.leftPadding = Qt.binding(() => {
-                                                 return control.SafeArea.margins.left
-                                             })
-            control.rightPadding = Qt.binding(() => {
-                                                  return control.SafeArea.margins.right
-                                              })
-            control.bottomPadding = Qt.binding(() => {
-                                                   return control.SafeArea.margins.bottom
-                                               })
-        }
-    }
 
     function openWithAnimOffset(yOffset) {
 
@@ -47,6 +33,139 @@ T.Dialog {
     }
 
     property list<BusyAction> actions
+
+    default property list<QtObject> content: []
+
+    Component.onCompleted: {
+        if (control.RootItem.root.SafeArea) {
+            control.leftPadding = Qt.binding(() => {
+                                                 return control.RootItem.root.SafeArea.margins.left
+                                             })
+            control.rightPadding = Qt.binding(() => {
+                                                  return control.RootItem.root.SafeArea.margins.right
+                                              })
+            control.bottomPadding = Qt.binding(() => {
+                                                   return control.RootItem.root.SafeArea.margins.bottom
+                                               })
+            control.topPadding = Qt.binding(() => {
+                                                return control.RootItem.root.SafeArea.margins.top
+                                            })
+        }
+    }
+
+    onFooterChanged: {
+        if (control.footer && content) {
+            // reassign footer to RallyRootPage so the SafeArea applies
+            const footer = control.footer
+            control.footer = null
+            content.footer = footer
+        }
+    }
+
+    onHeaderChanged: {
+        if (control.header && content) {
+            // reassign header to RallyRootPage so the SafeArea applies
+            const header = control.header
+            control.header = null
+            content.header = header
+        }
+    }
+
+    contentItem: T.Page {
+
+        id: content
+
+        padding: 0
+
+        contentData: control.content
+
+        background: Item {}
+
+        header: ToolBar {
+
+            T.RoundButton {
+                icon.source: "qrc:/icons/material_private/48x48/arrow-left.svg"
+                flat: true
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                onClicked: {
+                    control.backButtonClicked()
+                }
+            }
+
+            T.Label {
+                id: titleLabel
+                anchors.centerIn: parent
+                text: control.title
+                font.pixelSize: 16
+                font.letterSpacing: 1.1
+            }
+
+            Row {
+                id: titleActions
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                visible: titleActions.x - (titleLabel.x + titleLabel.width) > 10
+                Repeater {
+                    model: control.actions
+                    T.ToolButton {
+                        action: control.actions[index]
+                        flat: true
+                        enabled: !action.busy
+                        T.BusyIndicator {
+                            width: 40
+                            height: 40
+                            anchors.left: parent.left
+                            anchors.verticalCenter: parent.verticalCenter
+                            visible: action.busy
+                        }
+                    }
+                }
+            }
+
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                visible: !titleActions.visible
+                Repeater {
+                    model: control.actions
+                    T.ToolButton {
+                        action: control.actions[index]
+                        flat: true
+                        display: T.AbstractButton.IconOnly
+                        enabled: !action.busy
+                        T.BusyIndicator {
+                            width: 40
+                            height: 40
+                            anchors.centerIn: parent.contentItem
+                            visible: action.busy
+                        }
+                    }
+                }
+            }
+
+            T.ProgressBar {
+                id: progressBar
+                anchors.top: parent.bottom
+                width: parent.width
+                indeterminate: true
+
+                visible: false
+
+                T.Material.accent: T.Material.iconColor
+
+                Component.onCompleted: {
+                    contentItem.implicitHeight = 2
+                }
+
+                background: Rectangle {
+                    implicitHeight: 2
+                    color: T.Material.iconColor
+                    opacity: 0.6
+                }
+            }
+        }
+    }
 
     T.Overlay.modal: Item {
 
@@ -103,103 +222,20 @@ T.Dialog {
 
             ShaderEffectSource {
                 id: mainBlur
-                width: control.RootItem.contentItem ? control.RootItem.contentItem.width : 0
-                height: control.RootItem.contentItem ? control.RootItem.contentItem.height : 0
+                anchors.fill: parent
+                live: false
                 sourceItem: control.RootItem.contentItem ? control.RootItem.contentItem : null
-                anchors.centerIn: parent
                 hideSource: true
+                sourceRect: control.RootItem.contentItem ? mainBlur.mapToItem(control.RootItem.contentItem, 0, 0,
+                                                                              width, height) : null
             }
         }
     }
 
-    header: ToolBar {
-
-        y: control.yStart
-
-        T.RoundButton {
-            icon.source: "qrc:/icons/material_private/48x48/arrow-left.svg"
-            flat: true
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            onClicked: {
-                control.backButtonClicked()
-            }
-        }
-
-        T.Label {
-            id: titleLabel
-            anchors.centerIn: parent
-            text: control.title
-            font.pixelSize: 16
-            font.letterSpacing: 1.1
-        }
-
-        Row {
-            id: titleActions
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            visible: titleActions.x - (titleLabel.x + titleLabel.width) > 10
-            Repeater {
-                model: control.actions
-                T.ToolButton {
-                    action: control.actions[index]
-                    flat: true
-                    enabled: !action.busy
-                    T.BusyIndicator {
-                        width: 40
-                        height: 40
-                        anchors.left: parent.left
-                        anchors.verticalCenter: parent.verticalCenter
-                        visible: action.busy
-                    }
-                }
-            }
-        }
-
-        Row {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            visible: !titleActions.visible
-            Repeater {
-                model: control.actions
-                T.ToolButton {
-                    action: control.actions[index]
-                    flat: true
-                    display: T.AbstractButton.IconOnly
-                    enabled: !action.busy
-                    T.BusyIndicator {
-                        width: 40
-                        height: 40
-                        anchors.centerIn: parent.contentItem
-                        visible: action.busy
-                    }
-                }
-            }
-        }
-
-        T.ProgressBar {
-            id: progressBar
-            anchors.top: parent.bottom
-            width: parent.width
-            indeterminate: true
-
-            visible: false
-
-            T.Material.accent: T.Material.iconColor
-
-            Component.onCompleted: {
-                contentItem.implicitHeight = 2
-            }
-
-            background: Rectangle {
-                implicitHeight: 2
-                color: T.Material.iconColor
-                opacity: 0.6
-            }
-        }
-    }
+    header: Item {}
 
     enter: Transition {
+
         ParallelAnimation {
             ScriptAction {
                 script: {
@@ -210,47 +246,26 @@ T.Dialog {
                 PauseAnimation {
                     duration: 100
                 }
-                ParallelAnimation {
-                    NumberAnimation {
-                        target: control.contentItem
-                        property: "opacity"
-                        duration: 400
-                        easing.type: Easing.OutQuart
-                        from: 0
-                        to: 1
-                    }
-                    NumberAnimation {
-                        target: control.header
-                        property: "opacity"
-                        duration: 400
-                        easing.type: Easing.OutQuart
-                        from: 0
-                        to: 1
-                    }
+                NumberAnimation {
+                    target: control.contentItem
+                    property: "opacity"
+                    duration: 400
+                    easing.type: Easing.OutQuart
+                    from: 0
+                    to: 1
                 }
             }
             SequentialAnimation {
                 PauseAnimation {
                     duration: 100
                 }
-
-                ParallelAnimation {
-                    NumberAnimation {
-                        targets: [control]
-                        property: "topPadding"
-                        duration: 400
-                        from: control.yStart
-                        to: 0
-                        easing.type: Easing.OutQuart
-                    }
-                    NumberAnimation {
-                        targets: [control.header]
-                        property: "y"
-                        duration: 400
-                        from: control.yStart
-                        to: 0
-                        easing.type: Easing.OutQuart
-                    }
+                NumberAnimation {
+                    targets: [control.contentItem, control.contentItem.header, control.contentItem.footer]
+                    property: "topPadding"
+                    duration: 400
+                    from: priv.yStart
+                    to: 0
+                    easing.type: Easing.OutQuart
                 }
             }
             NumberAnimation {
@@ -330,27 +345,11 @@ T.Dialog {
                 to: 0
             }
             NumberAnimation {
-                target: control.header
-                property: "opacity"
-                duration: 400
-                easing.type: Easing.OutQuart
-                from: 1
-                to: 0
-            }
-            NumberAnimation {
-                targets: [control]
+                targets: [control.contentItem, control.contentItem.header, , control.contentItem.footer]
                 property: "topPadding"
                 duration: 400
                 from: 0
-                to: control.yStart
-                easing.type: Easing.OutQuart
-            }
-            NumberAnimation {
-                targets: [control.header]
-                property: "y"
-                duration: 400
-                from: 0
-                to: control.yStart
+                to: priv.yStart
                 easing.type: Easing.OutQuart
             }
         }
@@ -358,10 +357,14 @@ T.Dialog {
 
     onAboutToShow: {
 
-        control.header.opacity = 0
         control.contentItem.opacity = 0
-        control.header.y = control.yStart
-        control.topPadding = control.yStart
+        if (content) {
+            content.topPadding = priv.yStart
+            if (content.header && content.header.hasOwnProperty("topPadding"))
+                content.header.topPadding = priv.yStart
+            if (content.footer && content.footer.hasOwnProperty("topPadding"))
+                content.footer.topPadding = priv.yStart
+        }
     }
 
     onOpened: {
@@ -373,6 +376,7 @@ T.Dialog {
 
     QtObject {
         id: priv
+        readonly property real yStart: 80
         property real yAnimOffset: control.parent.height / 2
         property string state: ""
     }

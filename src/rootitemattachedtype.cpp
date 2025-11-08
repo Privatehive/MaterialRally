@@ -1,127 +1,114 @@
 #include "rootitemattachedtype.h"
 #include <QDebug>
+#include <qthread.h>
 
 QQuickItem *RootItemAttachedType::mpContentItem = nullptr;
-QQuickItem *RootItemAttachedType::mpHeader = nullptr;
-QQuickItem *RootItemAttachedType::mpFooter = nullptr;
+QObject *RootItemAttachedType::mpRoot = nullptr;
 InputEventFilter *RootItemAttachedType::mpInputDetector = nullptr;
-#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS) || defined(Q_OS_WATCHOS)
-bool RootItemAttachedType::mTouchInput = true;
-#else
-bool RootItemAttachedType::mTouchInput = false;
-#endif
+QMutex RootItemAttachedType::mMutex = QMutex();
 
 
 bool InputEventFilter::eventFilter(QObject *obj, QEvent *event) {
 
-	static bool firstEvent = true;
-	static bool isTouch = false;
+	bool isTouchInput = mIsTouch;
 
-	/*
 	switch(event->type()) {
-	  case QEvent::MouseMove:
-	    if(firstEvent || isTouch == true) {
-	      firstEvent = false;
-	      isTouch = false;
-	      emit touchInputChanged(false);
-	    }
-	    break;
-	  case QEvent::HoverMove:
-	    if(firstEvent || isTouch == false) {
-	      firstEvent = false;
-	      isTouch = true;
-	      emit touchInputChanged(true);
-	    }
-	    break;
-	  default:
-	    break;
+		case QEvent::HoverEnter:
+		case QEvent::HoverLeave:
+		case QEvent::HoverMove: {
+			auto *hv = static_cast<QHoverEvent *>(event);
+			if(hv->device()) {
+				if(hv->device()->type() == QInputDevice::DeviceType::Mouse) {
+					isTouchInput = false;
+				} else if(hv->device()->type() == QInputDevice::DeviceType::TouchPad) {
+					isTouchInput = false;
+				} else {
+					isTouchInput = true;
+				}
+			}
+			break;
+		}
+		case QEvent::MouseButtonPress:
+		case QEvent::MouseMove:
+		case QEvent::MouseButtonRelease: {
+			auto *me = static_cast<QMouseEvent *>(event);
+			if(me->source() == Qt::MouseEventNotSynthesized) {
+				isTouchInput = false;
+			} else if(me->source() == Qt::MouseEventSynthesizedBySystem) {
+				isTouchInput = true;
+			} else if(me->source() == Qt::MouseEventSynthesizedByQt) {
+				isTouchInput = true;
+			}
+			break;
+		}
+		case QEvent::TouchBegin:
+		case QEvent::TouchUpdate:
+		case QEvent::TouchEnd: {
+			// auto *te = static_cast<QTouchEvent *>(event);
+			isTouchInput = true;
+			break;
+		}
+		default:
+			break;
 	}
-	*/
+
+	if(mIsTouch != isTouchInput) {
+		mIsTouch = isTouchInput;
+		emit touchInputChanged(isTouchInput);
+	}
 	return false;
 }
 
 RootItemAttachedType::RootItemAttachedType(QObject *parent) {
 
+	mMutex.lock();
 	if(!mpInputDetector) {
-		mpInputDetector = new InputEventFilter(nullptr);
+#if defined(Q_OS_ANDROID) || defined(Q_OS_IOS) || defined(Q_OS_WATCHOS)
+		auto isTouch = true;
+#else
+		auto isTouch = false;
+#endif
+		mpInputDetector = new InputEventFilter(isTouch, QCoreApplication::instance());
+		QCoreApplication::instance()->installEventFilter(mpInputDetector);
 	}
-
-	connect(
-	 mpInputDetector, &InputEventFilter::touchInputChanged, this,
-	 [this](bool isTouch) {
-		 if(isTouch != mTouchInput) {
-			 if(isTouch) {
-				 qInfo() << "Input method changed from mouse to touch";
-			 } else {
-				 qInfo() << "Input method changed from touch to mouse";
-			 }
-			 mTouchInput = isTouch;
-		 }
-		 emit inputChanged(); // don't move into if block
-	 },
-	 Qt::QueuedConnection);
+	connect(mpInputDetector, &InputEventFilter::touchInputChanged, this, &RootItemAttachedType::inputChanged, Qt::QueuedConnection);
+	mMutex.unlock();
 }
 
 QQuickItem *RootItemAttachedType::getContentItem() {
 
+	QMutexLocker locker(&mMutex);
 	return mpContentItem;
 }
 
 void RootItemAttachedType::setContentItem(QQuickItem *root) {
 
-	if(mpContentItem && mpContentItem != root) {
-		mpContentItem->removeEventFilter(mpInputDetector);
-	}
-	if(root) {
-		root->installEventFilter(mpInputDetector);
-	}
-
+	QMutexLocker locker(&mMutex);
 	mpContentItem = root;
 	emit contentItemChanged(mpContentItem);
 }
 
-QQuickItem *RootItemAttachedType::getHeader() {
+QObject *RootItemAttachedType::getRoot() {
 
-	return mpHeader;
+	QMutexLocker locker(&mMutex);
+	return mpRoot;
 }
 
-void RootItemAttachedType::setHeader(QQuickItem *root) {
+void RootItemAttachedType::setRoot(QObject *root) {
 
-	if(mpHeader && mpHeader != root) {
-		mpHeader->removeEventFilter(mpInputDetector);
-	}
-	if(root) {
-		root->installEventFilter(mpInputDetector);
-	}
-
-	mpHeader = root;
-	emit headerChanged(mpHeader);
+	QMutexLocker locker(&mMutex);
+	mpRoot = root;
+	emit rootChanged(mpRoot);
 }
 
-QQuickItem *RootItemAttachedType::getFooter() {
+bool RootItemAttachedType::isTouchInput() {
 
-	return mpFooter;
+	QMutexLocker locker(&mMutex);
+	return mpInputDetector->isTouch();
 }
 
-void RootItemAttachedType::setFooter(QQuickItem *root) {
+bool RootItemAttachedType::isMouseInput() {
 
-	if(mpFooter && mpFooter != root) {
-		mpFooter->removeEventFilter(mpInputDetector);
-	}
-	if(root) {
-		root->installEventFilter(mpInputDetector);
-	}
-
-	mpFooter = root;
-	emit footerChanged(mpFooter);
-}
-
-bool RootItemAttachedType::isTouchInput() const {
-
-	return mTouchInput;
-}
-
-bool RootItemAttachedType::isMouseInput() const {
-
-	return !mTouchInput;
+	QMutexLocker locker(&mMutex);
+	return !mpInputDetector->isTouch();
 }

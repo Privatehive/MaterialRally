@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 import MaterialRally
 
 T.Dialog {
@@ -10,11 +10,13 @@ T.Dialog {
 
     property alias text: label.text
 
-    modal: true
-    parent: T.Overlay.overlay
     focus: true
-    anchors.centerIn: parent
+    modal: true
+
+    parent: T.Overlay.overlay
     width: Math.min(Math.max(parent.width / 1.5, 200), 500)
+
+    anchors.centerIn: parent
 
     closePolicy: T.Popup.CloseOnEscape
 
@@ -22,90 +24,82 @@ T.Dialog {
 
     T.Overlay.modal: Item {
 
-        id: modalOverlay
-
         anchors.fill: parent
 
-        opacity: 0
-        layer.enabled: true
+        onOpacityChanged: {
+            opacity = 1 // prevent the overlay from beeing hidden if dialog is getting closed
+        }
 
-        // Workaround: The overlay item is created with a delay
-        states: [
-            State {
-                when: priv.state === "open"
-                name: "open"
-            },
-            State {
-                when: priv.state === "close"
-                name: "close"
-            }
-        ]
+        Item {
 
-        transitions: [
-            Transition {
-                from: "*"
-                to: "open"
-                PropertyAnimation {
-                    target: modalOverlay
-                    property: "opacity"
-                    duration: 180
-                    easing.type: Easing.OutQuart
-                    from: 0
-                    to: 1
-                }
-            },
-            Transition {
-                from: "*"
-                to: "close"
-                PropertyAnimation {
-                    target: modalOverlay
-                    property: "opacity"
-                    duration: 180
-                    easing.type: Easing.InQuart
-                    from: 1
-                    to: 0
-                }
-            }
-        ]
+            id: modalOverlay
 
-        Rectangle {
             anchors.fill: parent
-            color: control.T.Material.backgroundColor
-        }
 
-        FastBlur {
-            id: headerBlur
-            width: control.RootItem.header ? control.RootItem.header.width : 0
-            height: control.RootItem.header ? control.RootItem.header.height : 0
-            source: control.RootItem.header ? control.RootItem.header : null
-            radius: 32
-            transparentBorder: true
-        }
+            // Workaround: The overlay item is created with a delay
+            states: [
+                State {
+                    when: priv.state === "open"
+                    name: "open"
+                },
+                State {
+                    when: priv.state === "close"
+                    name: "close"
+                }
+            ]
 
-        FastBlur {
-            id: mainBlur
-            width: control.RootItem.contentItem ? control.RootItem.contentItem.width : 0
-            height: control.RootItem.contentItem ? control.RootItem.contentItem.height : 0
-            source: control.RootItem.contentItem ? control.RootItem.contentItem : null
-            radius: 32
-            transparentBorder: true
-            anchors.top: headerBlur.bottom
-        }
+            transitions: [
+                Transition {
+                    from: "*"
+                    to: "open"
+                    PropertyAnimation {
+                        target: mainBlurEffect
+                        property: "blur"
+                        duration: 180
+                        easing.type: Easing.OutQuart
+                        from: 0
+                        to: 1
+                    }
+                },
+                Transition {
+                    from: "*"
+                    to: "close"
+                    PropertyAnimation {
+                        target: mainBlurEffect
+                        property: "blur"
+                        duration: 180
+                        easing.type: Easing.InQuart
+                        from: 1
+                        to: 0
+                    }
+                }
+            ]
 
-        FastBlur {
-            id: footerBlur
-            width: control.RootItem.footer ? control.RootItem.footer.width : 0
-            height: control.RootItem.footer ? control.RootItem.footer.height : 0
-            source: null
-            radius: 32
-            transparentBorder: true
-            anchors.top: mainBlur.bottom
-        }
+            ShaderEffectSource {
+                id: mainBlur
+                anchors.fill: parent
+                live: true
+                sourceItem: control.RootItem.contentItem ? control.RootItem.contentItem : null
+                hideSource: true
+                sourceRect: control.RootItem.contentItem ? mainBlur.mapToItem(control.RootItem.contentItem, 0, 0,
+                                                                              width, height) : null
+                visible: false
+            }
 
-        Rectangle {
-            anchors.fill: parent
-            color: "black"
-            opacity: 0.1
+            MultiEffect {
+                id: mainBlurEffect
+                source: mainBlur
+                anchors.fill: parent
+                blurEnabled: true
+                blur: 1
+                autoPaddingEnabled: true
+            }
+
+            Rectangle {
+                anchors.fill: parent
+                color: "black"
+                opacity: 0.1
+            }
         }
     }
 
@@ -157,8 +151,7 @@ T.Dialog {
         }
     }
 
-    contentItem: T.Label
-    {
+    contentItem: T.Label {
         id: label
         font.pixelSize: 16
         wrapMode: Text.WordWrap
@@ -166,11 +159,6 @@ T.Dialog {
 
     background: Rectangle {
         color: "black"
-    }
-
-    QtObject {
-        id: priv
-        property string state: ""
     }
 
     footer: ToolButton {
@@ -186,5 +174,10 @@ T.Dialog {
             height: 2
             width: control.availableWidth + control.padding / 2
         }
+    }
+
+    QtObject {
+        id: priv
+        property string state: ""
     }
 }

@@ -26,31 +26,84 @@ Pane {
             infoText: "test"
             title: qsTr("Test")
 
-            mainAction: Rally.BusyAction {
+            height: 300
 
+            mainAction: Rally.BusyAction {
                 checkable: false
                 text: "test"
                 busy: true
             }
 
-            ColumnLayout {
+            Rally.ScrollView {
 
-                Layout.fillWidth: true
+                anchors.fill: parent
 
-                Label {
-                    text: "9"
-                }
+                ColumnLayout {
 
-                Label {
-                    text: "asdfasdf"
-                }
+                    TextField {
+                        placeholderText: "asdfasdf"
+                        text: "asdfadsf"
+                    }
 
-                Label {
-                    text: "asdfasdf"
-                }
+                    TextField {
+                        placeholderText: "asdfasdf"
+                        text: "asdfadsf"
+                    }
 
-                Label {
-                    text: "asdfasdf"
+                    TextField {
+                        placeholderText: "asdfasdf"
+                        text: "asdfadsf"
+                    }
+
+                    TextField {
+                        placeholderText: "asdfasdf"
+                        text: "asdfadsf"
+                    }
+
+                    TextField {
+                        placeholderText: "asdfasdf"
+                        text: "asdfadsf"
+                    }
+
+                    Label {
+                        text: "9"
+                    }
+
+                    Label {
+                        text: "asdfasdf"
+                    }
+
+                    Label {
+                        text: "asdfasdf"
+                    }
+
+                    Label {
+                        text: "asdfasdf"
+                    }
+
+                    Button {
+                        id: toggleButton
+                        text: "toggle"
+                        checkable: true
+                    }
+
+                    Rally.CollapsibleControl {
+
+                        collapsed: toggleButton.checked
+
+                        ColumnLayout {
+
+                            TextField {
+                                placeholderText: "asdfasdf"
+                                text: "asdfadsf"
+                            }
+
+                            TextField {
+                                placeholderText: "asdfasdf"
+                                text: "asdfadsf"
+                            }
+                        }
+                    }
                 }
             }
         }

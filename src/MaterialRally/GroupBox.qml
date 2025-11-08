@@ -11,6 +11,7 @@ T.GroupBox {
     property BusyAction mainAction
     property string infoText: ""
     property alias icon: iconLabel.icon
+    property alias animationDuration: animation.duration
 
     T.Material.roundedScale: T.Material.NotRounded
 
@@ -33,6 +34,7 @@ T.GroupBox {
 
     Behavior on implicitHeight {
         NumberAnimation {
+            id: animation
             duration: 200
             easing.type: Easing.OutQuad
         }

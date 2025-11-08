@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QIcon>
+#include <QStyleHints>
 
 /*!
     \title Material Rally Gallery
@@ -19,7 +20,7 @@ int main(int argc, char **argv) {
 	if(QFile::exists(qmlMainFile)) {
 		qInfo() << "QML hot reloading enabled";
 		qmlEngine.setHotReload(true);
-		qmlEngine.loadRootItem(qmlMainFile, false);
+		qmlEngine.loadRootItem(qmlMainFile, true);
 	} else {
 		qmlEngine.setHotReload(false);
 		qmlEngine.loadRootItem("qrc:/qt/qml/Gallery/Gallery/main.qml", false);

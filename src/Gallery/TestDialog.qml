@@ -14,8 +14,9 @@ Rally.Dialog {
     Rally.ScrollView {
 
         anchors.fill: parent
+        clip: true
 
-        contentItem: Rally.FormLayout {
+        Rally.FormLayout {
 
             width: Math.min(parent.width, 600)
 
@@ -24,8 +25,7 @@ Rally.Dialog {
                 title: "group"
                 Layout.fillWidth: true
 
-                mainAction: Rally.BusyAction
-                {
+                mainAction: Rally.BusyAction {
                     checkable: true
                     checked: false
                 }
@@ -36,29 +36,25 @@ Rally.Dialog {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
                 }
             }
 
@@ -73,29 +69,25 @@ Rally.Dialog {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
                 }
             }
 
@@ -110,29 +102,25 @@ Rally.Dialog {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
                 }
             }
 
@@ -147,29 +135,25 @@ Rally.Dialog {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
 
                     Label {
                         text: "test"
                     }
 
-                    ComboBox {
-                    }
+                    ComboBox {}
                 }
             }
         }

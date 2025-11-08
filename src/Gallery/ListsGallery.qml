@@ -7,33 +7,11 @@ import MaterialRally as Rally
 
 Pane {
 
+    id: control
+
     ColumnLayout {
 
         anchors.fill: parent
-
-        Rally.Icon {
-            icon.name: "list-box"
-        }
-
-        Rally.GroupBox {
-            title: qsTr("Scaling test")
-            infoText: qsTr("This white rectangle should have a width and height of 1 cm")
-
-            Rectangle {
-                implicitHeight: Screen.pixelDensity * 10
-                implicitWidth: Screen.pixelDensity * 10
-            }
-        }
-
-        Rally.GroupBox {
-            title: qsTr("Scaling test")
-            infoText: qsTr("This white rectangle should have a width and height of 1 cm")
-
-            Rectangle {
-                implicitHeight: Screen.pixelDensity * 500
-                implicitWidth: Screen.pixelDensity * 1
-            }
-        }
 
         Rally.GroupBox {
 
@@ -84,32 +62,59 @@ Pane {
             title: qsTr("Messages")
             Layout.fillWidth: true
             text: qsTr("asdfasdfasf")
+            maxCount: 10
         }
 
         Rally.Button {
-            text: qsTr("Open Popup")
-            onClicked: popup.open()
+            text: qsTr("Add Info Snackbar Message")
+            onClicked: {
+                snackbarMessageTop.pushMessage("Info Message", "info")
+                snackbarMessageBottom.pushMessage("Info Message", "info")
+            }
         }
 
         Rally.Button {
-            text: qsTr("Open Popup")
-            onClicked: popup.open()
+            text: qsTr("Add Warning Snackbar Message")
+            onClicked: {
+                snackbarMessageTop.pushMessage("Warning Message", "warning")
+                snackbarMessageBottom.pushMessage("Warning Message", "warning")
+            }
         }
+
         Rally.Button {
-            text: qsTr("Open Popup")
-            onClicked: popup.open()
+            text: qsTr("Add Error Snackbar Message")
+            onClicked: {
+                snackbarMessageTop.pushMessage(
+                            "Error Messageasd asd fasd fasd fasd fas dfasd fasasfd afds  afdsdfs fdssfda dsfads fa dsf dsf adsf ads dafsadsdsfda sf",
+                            "error", 1000, "asdfasdf")
+                snackbarMessageBottom.pushMessage(
+                            "Error Messageasd asd fasd fasd fasd fas dfasd fasasfd afds  afdsdfs fdssfda dsfads fa dsf dsf adsf ads dafsadsdsfda sf",
+                            "error", 1000, "asdfasdf")
+            }
         }
-        Rally.Button {
-            text: qsTr("Open Popup")
-            onClicked: popup.open()
-        }
-        Rally.Button {
-            text: qsTr("Open Popup")
-            onClicked: popup.open()
-        }
-        Rally.Button {
-            text: qsTr("Open Popup")
-            onClicked: popup.open()
-        }
+    }
+
+    Rally.SnackBar {
+
+        id: snackbarMessageTop
+        inverted: false
+        parent: Overlay.overlay
+        //width: 100
+        anchors.left: parent.left
+        //anchors.bottom: parent.bottom
+        anchors.top: parent.top
+        anchors.right: parent.right
+    }
+
+    Rally.SnackBar {
+
+        id: snackbarMessageBottom
+        inverted: true
+        parent: Overlay.overlay
+        //width: 100
+        anchors.left: parent.left
+        anchors.bottom: parent.bottom
+        //anchors.top: parent.top
+        anchors.right: parent.right
     }
 }

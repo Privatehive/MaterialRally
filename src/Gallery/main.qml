@@ -5,9 +5,14 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import MaterialRally as Rally
 
-Rally.RallyApplicationWindow {
+Rally.RallyRootPage {
 
     id: root
+
+    SafeArea.additionalMargins.bottom: 40
+    SafeArea.additionalMargins.left: 40
+    SafeArea.additionalMargins.right: 40
+    SafeArea.additionalMargins.top: 40
 
     ListModel {
 
@@ -27,8 +32,7 @@ Rally.RallyApplicationWindow {
         }
     }
 
-    header: Rally.ToolBar
-    {
+    header: Rally.ToolBar {
 
         Rally.TabBarFolding {
 
@@ -76,6 +80,7 @@ Rally.RallyApplicationWindow {
         anchors.fill: parent
 
         reloadable: false
+        clip: true
 
         SwipeView {
 
