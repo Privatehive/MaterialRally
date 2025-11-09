@@ -3,6 +3,19 @@ import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
 import QtQuick.Controls.Material.impl as T
 
+
+/*!
+    \qmltype Button
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits T.Button
+
+    \brief A button.
+
+    This is a Material Rally styled button.
+
+    \image button.png "Button"
+*/
 T.Button {
 
     id: control
@@ -23,10 +36,12 @@ T.Button {
         implicitHeight: T.Material.buttonHeight
 
         radius: 4
-		color: control.T.Material.buttonColor(control.T.Material.theme, control.T.Material.background, control.T.Material.accent, control.enabled, control.flat, control.highlighted, control.checked)
+        color: control.T.Material.buttonColor(control.T.Material.theme, control.T.Material.background,
+                                              control.T.Material.accent, control.enabled, control.flat,
+                                              control.highlighted, control.checked)
 
         T.Ripple {
-        	clip: true
+            clip: true
             clipRadius: 2
             width: parent.width
             height: parent.height

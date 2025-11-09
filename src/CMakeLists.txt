@@ -29,7 +29,6 @@ qt_add_qml_module(MaterialRally
 
         IMPORTS
         QtQuick
-        Qt5Compat.GraphicalEffects
 
         SOURCES
         rootitemattachedtype.h
@@ -67,9 +66,6 @@ qt_add_qml_module(MaterialRally
         MaterialRally/CollapsibleControl.qml
         MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
         MaterialRally/Helper.qml
-        MaterialRally/private/RefreshableScrollView.qml
-        MaterialRally/private/ScrollablePageBase.qml
-        MaterialRally/private/ScrollViewBase.qml
         MaterialRally/private/SizeLabel.qml
         MaterialRally/private/ReloadIndicator.qml
 

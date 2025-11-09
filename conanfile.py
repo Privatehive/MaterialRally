@@ -76,8 +76,6 @@ class MaterialRallyConan(ConanFile):
                 raise ConanInvalidConfiguration("qt qtshadertools options is required")
             if not self.dependencies["qt"].options.qtsvg:
                 raise ConanInvalidConfiguration("qt qtsvg options is required")
-            if not self.dependencies["qt"].options.qt5compat:
-                raise ConanInvalidConfiguration("qt qt5compat options is required")
             if not self.dependencies["qt"].options.quick2style == "material":
                 raise ConanInvalidConfiguration("qt quick2style options must contain value == material")
 
@@ -96,15 +94,15 @@ class MaterialRallyConan(ConanFile):
         ms.generate()
 
     def build(self):
+        if self.options.doc:
+            self.run(
+                "qdoc --outputdir %s ./doc/config/materialrally.qdocconf" % os.path.join(self.package_folder, 'doc'),
+                cwd=self.source_folder)
         cmake = CMake(self)
         cmake.configure()
         cmake.build()
         if self.settings.os == "Android":
             cmake.build(target="aab")
-        if self.options.doc:
-            self.run(
-                "qdoc --outputdir %s ./doc/config/materialrally.qdocconf" % os.path.join(self.package_folder, 'doc'),
-                cwd=self.source_folder)
 
     def package(self):
         cmake = CMake(self)

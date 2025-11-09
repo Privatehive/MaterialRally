@@ -5,16 +5,57 @@ import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
 import MaterialRally as Rally
 
+
+/*!
+    \qmltype SnackBar
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits Control
+
+    \brief Displays snack-bar notifikations.
+
+    Displays multiple snack-bar notifications on top of each other. For each notification, you can individually specify which text & icon, is displayed, with what severity, and for how long.
+
+    \image snack-bar.png "SnackBar"
+*/
 T.Control {
 
     id: control
 
+
+    /*!
+      \qmlproperty int SnackBar::maxCount
+      \default 10
+
+      This is the maximum number of snack-bar notifications the snack-bar can hold. If the maxCount is reached and an additional snack-bar notification is pushed the oldest notification will be removed immediately.
+    */
     property int maxCount: 10
+
+
+    /*!
+      \qmlproperty bool SnackBar::inverted
+      \default false
+
+      By default, new snack-bar notifications are added to the top and old messages are removed from the bottom. By setting inverted to true new snack-bar notifications are added to the bottom and old messages are removed from the top.
+    */
     property bool inverted: false
 
-    implicitWidth: 400
 
-    // severity one of "error", "warning", "info"
+    /*!
+      \qmlmethod void SnackBar::pushMessage(string message, string severity, int timeout, string title, string iconName)
+
+      Push a new snack-bar notification. This function accepts five parameters:
+
+      \a message: The message string to display
+
+      \a severity: Determines the background color. Allowed values are: "info", "warning", "error". Defaults to "info"
+
+      \a timeout: How long the snack-bar notification is displayed in milliseconds. Defaults to 5000
+
+      \a title: Optionally give the notification a title. Defaults to null
+
+      \a iconName: Optionally give the notification an icon. Defaults to null
+    */
     function pushMessage(message, severity, timeout, title, iconName) {
 
         if (!message) {
@@ -53,10 +94,18 @@ T.Control {
         }
     }
 
+
+    /*!
+      \qmlmethod void SnackBar::clear()
+
+      Remove all snack-bar notifications
+    */
     function clear() {
 
         messageModel.clear()
     }
+
+    implicitWidth: 400
 
     T.ListModel {
         id: messageModel

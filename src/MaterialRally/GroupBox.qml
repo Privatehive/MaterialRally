@@ -5,15 +5,65 @@ import QtQuick.Layouts
 import MaterialRally
 import "helper.js" as Helper
 
+
+/*!
+    \qmltype GroupBox
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits T.GroupBox
+
+    \brief Visual frame and title for a logical group of controls.
+
+    A group-box visually groups any child items together. A group-box shows a title and optionally an icon. A group-box may contain a busy-action that can be triggered by the user.
+    The group-box can also show a help pop-up.
+
+    \image group-box.png "GroupBox"
+*/
 T.GroupBox {
 
     id: control
+
+
+    /*!
+      \qmlproperty BusyAction GroupBox::mainAction
+      \default null
+
+      A BusyAction that can be triggerd by the user. The text of the action is shown in the header of the group-box. If triggered, the group-box will show a progress indicator.
+    */
     property BusyAction mainAction
+
+
+    /*!
+      \qmlproperty string GroupBox::infoText
+      \default ""
+
+        If provided, an info icon is displayed to the right of the group-box title. When the user clicks on it, a pop-up opens with the specified text.
+    */
     property string infoText: ""
+
+
+    /*!
+      \qmlproperty icon group GroupBox::icon
+      \default ""
+
+        If provided, the specified icon is displayed to the left of the group-box title. Use icon.name or icon.source and icon.color.
+    */
     property alias icon: iconLabel.icon
+
+
+    /*!
+      \qmlproperty int group GroupBox::animationDuration
+      \default 200
+
+        Animates changes in the height of the group-box. Set this to 0 to disable animations.
+    */
     property alias animationDuration: animation.duration
 
     T.Material.roundedScale: T.Material.NotRounded
+
+    topPadding: padding + control.implicitLabelHeight
+
+    clip: true
 
     TapHandler {
         onTapped: {
@@ -27,10 +77,6 @@ T.GroupBox {
         color: "#393942"
         radius: control.T.Material.roundedScale
     }
-
-    topPadding: padding + control.implicitLabelHeight
-
-    clip: true
 
     Behavior on implicitHeight {
         NumberAnimation {

@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
-import Qt5Compat.GraphicalEffects
+import QtQuick.Effects
 
 T.Button {
 
@@ -15,9 +15,8 @@ T.Button {
     icon.width: 22
     icon.height: 22
     implicitHeight: button.implicitHeight
-    implicitWidth: Math.max(
-                       button.implicitWidth + (button.checked ? label.implicitWidth : 0),
-                       button.checked ? expandWidth : button.implicitWidth)
+    implicitWidth: Math.max(button.implicitWidth + (button.checked ? label.implicitWidth : 0),
+                            button.checked ? expandWidth : button.implicitWidth)
 
     property real expandWidth: 0
     property real proposedWidth: button.implicitWidth + label.implicitWidth
@@ -54,13 +53,12 @@ T.Button {
         }
     }
 
-    DropShadow {
-        anchors.fill: button
-        radius: 4
-        samples: radius * 2 + 1
-        color: control.T.Material.dropShadowColor
+    MultiEffect {
         source: button
-        visible: control.checked
+        anchors.fill: button
+        shadowEnabled: true
+        shadowScale: 0.5
+        autoPaddingEnabled: true
     }
 
     T.Label {
@@ -114,12 +112,13 @@ T.Button {
         ]
     }
 
-    DropShadow {
-        anchors.fill: label
-        radius: 4
-        samples: radius * 2 + 1
-        color: control.T.Material.dropShadowColor
+    MultiEffect {
         source: label
+        anchors.fill: label
+        shadowEnabled: true
+        shadowScale: 0.5
+        shadowColor: control.T.Material.dropShadowColor
+        autoPaddingEnabled: true
         opacity: label.opacity
     }
 

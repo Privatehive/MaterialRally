@@ -5,11 +5,45 @@ import QtQuick.Controls.Material as T
 import MaterialRally as Rally
 import "./private" as RallyPrivate
 
+
+/*!
+    \qmltype ScrollView
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits Control
+
+    \brief Scrollable view.
+
+    ScrollView provides vertical scrolling for user-defined content. A vertical scrollbar is displayed if the content height is greater than the height of the ScrolView - otherwise it is hidden.
+    If Mouse input is detected, the view can only be scrolled via mouse wheel or via the scrollbar.
+    If Touch input is detected, the view can only be swiped and the scrollbar becomes a non-interactive indicator.
+
+    \image scroll-view.png "ScrollView"
+*/
 T.Control {
 
     id: control
 
+
+    /*!
+      \qmlproperty bool ScrollView::reloadable
+      \default false
+
+      Not usable right now - in development!
+
+      Only works with Touch input!
+
+      If \a reloadable equals true, the ScrollView can be dragged over its top bounds. Then a reload indicator becomes visible. If draged further until the reload indicator exceeds the threshold the user can release the drag and the reload signal is emitted.
+    */
     property bool reloadable: false
+
+
+    /*!
+      \qmlproperty bool ScrollView::boundsStretch
+      \default Rally.RootItem.isTouchInput
+
+      If \boundsStretch equals true, the ScrollView will stretch its content as soon as the top or bottom bounds are reached. This is useful for touch input to indicate that the bounds have been reached.
+    */
     property bool boundsStretch: Rally.RootItem.isTouchInput
 
     implicitHeight: Math.max(implicitBackgroundHeight + topInset + bottomInset,

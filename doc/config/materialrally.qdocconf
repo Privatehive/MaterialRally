@@ -11,7 +11,7 @@ sources.fileextensions  = "*.cpp *.qml *.qdoc"
 
 headerdirs += ../../
 sourcedirs += ../../
-imagedirs  += ../images
+imagedirs += ../images
 
 HTML.footer =
 

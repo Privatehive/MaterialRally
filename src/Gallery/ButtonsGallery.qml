@@ -11,6 +11,11 @@ Pane {
 
         width: parent.width
 
+        Rally.Button {
+            text: "A rally button"
+            icon.source: "qrc:/icons/material_private/48x48/eye.svg"
+        }
+
         Button {
             text: "dialog"
             onClicked: Rally.Helper.createDialog(Qt.resolvedUrl("TestDialog.qml"))
