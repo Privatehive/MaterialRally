@@ -1,5 +1,6 @@
 import QtQml
 import QtQuick as T
+import "flingphysics.js" as FlingPhysics
 
 
 /*!
@@ -69,14 +70,33 @@ T.Item {
       delegates, so it has to be excluded explicitly (verified empirically; Qt Quick source
       wasn't available to confirm directly).
     */
-    readonly property int count: _pages().length
+    readonly property int count: _pageList.length
 
     /*!
       The page at currentIndex, or null if currentIndex is out of range (e.g. no pages yet).
     */
-    readonly property T.Item currentItem: (currentIndex >= 0 && currentIndex < count) ? _pages()[currentIndex] : null
+    readonly property T.Item currentItem: (currentIndex >= 0 && currentIndex < _pageList.length)
+                                          ? _pageList[currentIndex] : null
 
-    function _pages() {
+    // The resolved page list, refreshed only when pageStrip's children actually change. Holding
+    // it in a typed list rather than recomputing it inside count/currentItem keeps both of those
+    // AOT-compilable - _scanPages() itself cannot be, because qmlcachegen has no instruction for
+    // `instanceof` ("generate_CmpInstanceOf not implemented"), and it would otherwise poison
+    // every binding that touched it.
+    property list<T.Item> _pageList
+
+    /*!
+      The resolved pages, in order. Cheap - returns the cached list.
+    */
+    function _pages(): list<T.Item> {
+        return control._pageList
+    }
+
+    // Item.children is a plain structural list that includes a declared Repeater alongside the
+    // delegates it generated, unlike a Positioner's own layout, so the Repeater has to be
+    // excluded explicitly (verified empirically; Qt Quick source wasn't available to confirm
+    // directly).
+    function _scanPages() {
         var result = []
         for (var i = 0; i < pageStrip.children.length; i++) {
             var child = pageStrip.children[i]
@@ -157,12 +177,28 @@ T.Item {
     // declared pages and any that appear/disappear later (e.g. a Repeater's model changing),
     // unlike a one-time Component.onCompleted loop which would only ever see the startup set.
     function _onPagesChanged() {
-        control._bindPageSizes()
+        const scanned = control._scanPages()
+        // childrenChanged fires for changes that leave the page set alone (a Repeater
+        // re-parenting, a page toggling visibility). Re-binding then would drop and recreate
+        // three bindings per page for nothing, so only do the work when the list really moved.
+        if (!control._samePages(scanned))
+            control._bindPageSizes(scanned)
         if (control.currentIndex > control.count - 1)
             control.currentIndex = Math.max(0, control.count - 1)
     }
 
-    function _bindPageSizes() {
+    function _samePages(scanned): bool {
+        const current = control._pageList
+        if (current.length !== scanned.length)
+            return false
+        for (let i = 0; i < scanned.length; i++) {
+            if (current[i] !== scanned[i])
+                return false
+        }
+        return true
+    }
+
+    function _bindPageSizes(pages) {
         // Pages fill the SwipeView, matching stock SwipeView - bind each page's size to ours
         // (overriding whatever it declared) rather than requiring every page to set width/
         // height bindings manually, the way Rally.Flickable's own content does (a SwipeView's
@@ -178,7 +214,6 @@ T.Item {
         // page 0 slid every later page one slot left while _rowX still assumed fixed slots,
         // putting the current page off-screen and rendering blank. Explicit per-index placement
         // makes the strip independent of any page's visibility.
-        const pages = control._pages()
         for (let i = 0; i < pages.length; i++) {
             const page = pages[i]
             const index = i     // fresh binding per iteration - a `var` here would capture the
@@ -188,6 +223,7 @@ T.Item {
             page.x = Qt.binding(function () { return index * control._pageStep })
             page.y = 0
         }
+        control._pageList = pages
     }
 
     function _clamp(value: real, min: real, max: real): real {
@@ -273,51 +309,31 @@ T.Item {
         xAxis.enabled: true
         yAxis.enabled: false
 
-        property real _lastX: 0
-        // Same short rolling-window release velocity tracking as Rally.Flickable, and for the
-        // same reason: a smoothed estimate (like centroid.velocity) undershoots the true release
-        // speed of a real flick, which is what flingCommitVelocity needs to judge accurately.
-        property var _velocitySamples: []
-        readonly property real _velocityWindowMs: 60
-
-        function _recordVelocitySample(x) {
-            var now = Date.now()
-            dragHandler._velocitySamples.push({"x": x, "t": now})
-            while (dragHandler._velocitySamples.length > 1
-                && now - dragHandler._velocitySamples[0].t > dragHandler._velocityWindowMs)
-                dragHandler._velocitySamples.shift()
-        }
-
-        function _computeVelocity() {
-            var samples = dragHandler._velocitySamples
-            if (samples.length < 2)
-                return 0
-            var first = samples[0]
-            var last = samples[samples.length - 1]
-            var dt = (last.t - first.t) / 1000
-            if (dt <= 0)
-                return 0
-            return (last.x - first.x) / dt
-        }
+        // Shared with Rally.Flickable - see FlingPhysics.VelocityTracker for why a smoothed
+        // estimate like centroid.velocity is not good enough here, which is what
+        // flingCommitVelocity needs to judge accurately. Allocated once; recording a sample
+        // allocates nothing, unlike the {x, t} object literal plus Array.shift() this replaces,
+        // which ran on every single touch move.
+        readonly property var _tracker: new FlingPhysics.VelocityTracker(60)
 
         onActiveChanged: {
             if (dragHandler.active) {
-                dragHandler._lastX = 0
-                dragHandler._velocitySamples = []
+                dragHandler._tracker.reset()
                 control._dragStartIndex = control.currentIndex
                 control._dragging = true
                 settleAnim.stop()
             } else {
                 control._dragging = false
-                control._commitDragEnd(dragHandler._computeVelocity())
+                dragHandler._tracker.compute()
+                control._commitDragEnd(dragHandler._tracker.vx)
             }
         }
 
         onActiveTranslationChanged: {
-            var t = dragHandler.activeTranslation
-            var dx = t.x - dragHandler._lastX
-            dragHandler._lastX = t.x
-            dragHandler._recordVelocitySample(t.x)
+            const tr = dragHandler._tracker
+            const tx = dragHandler.activeTranslation.x
+            const dx = tx - tr.lastX
+            tr.record(tx, 0)
             control._applyPageDrag(dx)
         }
 

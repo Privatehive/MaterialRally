@@ -54,3 +54,84 @@ function splineProgress(t) {
         return 1.0
     return 1.0 - Math.pow(1.0 - t, PROGRESS_EXPONENT)
 }
+
+// Short rolling-window release-velocity tracker, shared by Rally.Flickable and Rally.SwipeView.
+//
+// Qt's own centroid.velocity is a smoothed estimate tuned for general pointer tracking, which
+// systematically undershoots a real flick's release speed (a flick accelerates right up to the
+// moment of release). This instead keeps raw (position, timestamp) samples over a short window
+// and takes total displacement / elapsed time across it - responsive to the true recent motion
+// without being as noisy as a single last-frame delta.
+//
+// Fixed-size ring buffer, allocated once per tracker and never resized: recording a sample must
+// not allocate, because it happens on every touch move (a few hundred times a second on a
+// high-rate digitiser). CAPACITY must stay a power of two for the `& MASK` wrap.
+//
+// Results are written to this.vx / this.vy rather than returned, so computing a velocity does
+// not allocate either. Deliberately plain numbers and no Qt.* calls - a .pragma library script
+// has no QML global object.
+var VELOCITY_CAPACITY = 32
+var VELOCITY_MASK = 31
+
+function VelocityTracker(windowMs) {
+    this.windowMs = (windowMs === undefined) ? 60 : windowMs
+    this._x = new Float64Array(VELOCITY_CAPACITY)
+    this._y = new Float64Array(VELOCITY_CAPACITY)
+    this._t = new Float64Array(VELOCITY_CAPACITY)
+    this._head = 0
+    this._count = 0
+    this.vx = 0
+    this.vy = 0
+    // The most recently recorded sample, so callers can take a per-move delta without keeping
+    // their own copy of it (which, as a QML property, would emit a change signal every move).
+    this.lastX = 0
+    this.lastY = 0
+}
+
+VelocityTracker.prototype.reset = function () {
+    this._head = 0
+    this._count = 0
+    this.vx = 0
+    this.vy = 0
+    this.lastX = 0
+    this.lastY = 0
+}
+
+VelocityTracker.prototype.record = function (x, y, now) {
+    var i = this._head
+    this._x[i] = x
+    this._y[i] = y
+    this._t[i] = (now === undefined) ? Date.now() : now
+    this._head = (i + 1) & VELOCITY_MASK
+    if (this._count < VELOCITY_CAPACITY)
+        this._count = this._count + 1
+    this.lastX = x
+    this.lastY = y
+}
+
+// Velocity is the total displacement over the oldest sample still within windowMs of the newest,
+// or zero if there is no such second sample. At sample rates above ~530 Hz the oldest in-window
+// samples are simply dropped, which slightly narrows the effective window but never yields a
+// wrong velocity.
+VelocityTracker.prototype.compute = function () {
+    this.vx = 0
+    this.vy = 0
+    if (this._count < 2)
+        return
+    var newest = (this._head - 1) & VELOCITY_MASK
+    var tNew = this._t[newest]
+    var oldest = newest
+    for (var k = 1; k < this._count; ++k) {
+        var j = (newest - k) & VELOCITY_MASK
+        if (tNew - this._t[j] > this.windowMs)
+            break
+        oldest = j
+    }
+    if (oldest === newest)
+        return
+    var dt = (tNew - this._t[oldest]) / 1000
+    if (dt <= 0)
+        return
+    this.vx = (this._x[newest] - this._x[oldest]) / dt
+    this.vy = (this._y[newest] - this._y[oldest]) / dt
+}

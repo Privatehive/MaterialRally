@@ -621,90 +621,14 @@ T.Item {
         xAxis.enabled: control._canFlickX
         yAxis.enabled: control._canFlickY
 
-        // Qt's own centroid.velocity is a smoothed estimate tuned for general pointer tracking,
-        // which systematically undershoots a real flick's release speed (a flick typically
-        // accelerates right up to the moment of release). We track our own short rolling window
-        // of raw (position, timestamp) samples instead, and compute velocity as total
-        // displacement/time across that window - responsive to the true recent motion without
-        // being as noisy as a single last-frame delta.
-        readonly property int _velocityWindowMs: 60
-
-        // Fixed-size ring buffer, allocated once and never resized or reallocated - the previous
-        // version pushed a fresh {x, y, t} object per touch move and pruned with Array.shift(),
-        // i.e. an allocation and an O(n) memmove on every single sample, up to a few hundred times
-        // a second on a high-rate digitiser. Capacity must stay a power of two for the `& 31` masks.
-        // 32 samples spans the 60 ms window up to ~530 Hz; above that the oldest in-window samples
-        // are simply dropped, which slightly narrows the effective window but never yields a wrong
-        // velocity.
-        //
-        // All mutable state deliberately lives *inside* this one JS object: field writes on a plain
-        // JS object are inline-cached stores, whereas `dragHandler._head = x` would emit a QML
-        // change signal on every touch move.
-        readonly property var _ring: ({
-            x: new Float64Array(32),
-            y: new Float64Array(32),
-            t: new Float64Array(32),
-            head: 0,    // index of the next write
-            count: 0,
-            lx: 0,      // last activeTranslation, replaces the Qt.vector2d round-trip
-            ly: 0,
-            vx: 0,      // result of _computeVelocity(), written in place to avoid allocating
-            vy: 0
-        })
-
-        function _resetSamples() {
-            const r = dragHandler._ring
-            r.head = 0
-            r.count = 0
-            r.lx = 0
-            r.ly = 0
-            r.vx = 0
-            r.vy = 0
-        }
-
-        function _recordSample(x: real, y: real) {
-            const r = dragHandler._ring
-            const i = r.head
-            r.x[i] = x
-            r.y[i] = y
-            r.t[i] = Date.now()
-            r.head = (i + 1) & 31
-            if (r.count < 32)
-                r.count = r.count + 1
-        }
-
-        // Same rolling-window semantics as the old array version: velocity is the total
-        // displacement over the oldest sample still within _velocityWindowMs of the newest, or
-        // zero if there is no such second sample. Writes into the ring rather than returning a
-        // Qt.vector2d.
-        function _computeVelocity() {
-            const r = dragHandler._ring
-            r.vx = 0
-            r.vy = 0
-            if (r.count < 2)
-                return
-            const win = dragHandler._velocityWindowMs
-            const newest = (r.head - 1) & 31
-            const tNew = r.t[newest]
-            let oldest = newest
-            for (let k = 1; k < r.count; ++k) {
-                const j = (newest - k) & 31
-                if (tNew - r.t[j] > win)
-                    break
-                oldest = j
-            }
-            if (oldest === newest)
-                return
-            const dt = (tNew - r.t[oldest]) / 1000
-            if (dt <= 0)
-                return
-            r.vx = (r.x[newest] - r.x[oldest]) / dt
-            r.vy = (r.y[newest] - r.y[oldest]) / dt
-        }
+        // Allocated once. Recording a sample allocates nothing, which matters because it happens
+        // on every touch move. Shared with Rally.SwipeView - see FlingPhysics.VelocityTracker
+        // for why Qt's own centroid.velocity is not used.
+        readonly property var _tracker: new FlingPhysics.VelocityTracker(60)
 
         onActiveChanged: {
             if (dragHandler.active) {
-                dragHandler._resetSamples()
+                dragHandler._tracker.reset()
                 control._axisAccumX = 0
                 control._axisAccumY = 0
                 control._dragAxis = ""
@@ -743,8 +667,8 @@ T.Item {
                         control._applyDrag(cx, cy)
                 }
             } else {
-                dragHandler._computeVelocity()
-                const r = dragHandler._ring
+                const tr = dragHandler._tracker
+                tr.compute()
                 const overX = control._overshootX !== 0
                 const overY = control._overshootY !== 0
                 // Releasing from an overshoot rebounds instead of flinging. Letting _startFling run
@@ -756,21 +680,19 @@ T.Item {
                 if (overY)
                     control._startReboundY()
                 if (!overX && !overY)
-                    control._startFling(r.vx, r.vy)
+                    control._startFling(tr.vx, tr.vy)
                 control._releaseOverscroll()
             }
         }
 
         onActiveTranslationChanged: {
-            const r = dragHandler._ring
+            const tr = dragHandler._tracker
             const t = dragHandler.activeTranslation
             const tx = t.x
             const ty = t.y
-            const dx = tx - r.lx
-            const dy = ty - r.ly
-            r.lx = tx
-            r.ly = ty
-            dragHandler._recordSample(tx, ty)
+            const dx = tx - tr.lastX
+            const dy = ty - tr.lastY
+            tr.record(tx, ty)
             control._applyDrag(dx, dy)
         }
 
