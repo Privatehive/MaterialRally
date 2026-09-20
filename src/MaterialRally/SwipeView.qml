@@ -78,8 +78,8 @@ T.Item {
 
     function _pages() {
         var result = []
-        for (var i = 0; i < pagesRow.children.length; i++) {
-            var child = pagesRow.children[i]
+        for (var i = 0; i < pageStrip.children.length; i++) {
+            var child = pageStrip.children[i]
             if (!(child instanceof T.Repeater))
                 result.push(child)
         }
@@ -169,11 +169,24 @@ T.Item {
         // pages are always meant to fill it; a Flickable's content isn't). Re-binding an
         // already-bound page here is harmless/idempotent, so this doesn't need to track which
         // pages were already done.
-        var pages = control._pages()
-        for (var i = 0; i < pages.length; i++) {
-            var page = pages[i]
+        //
+        // x is bound here too, by index, rather than letting a positioner do it. pageStrip used
+        // to be a Row, and QQuickPositioner omits explicitly-hidden children from layout and
+        // re-packs the rest (qquickpositioners.cpp: "Items are only omitted from positioning if
+        // they are explicitly hidden"). A lazily-loaded page - e.g. the Gallery's
+        // `visible: status == Loader.Ready` Loaders - is invisible until it loads, so unloading
+        // page 0 slid every later page one slot left while _rowX still assumed fixed slots,
+        // putting the current page off-screen and rendering blank. Explicit per-index placement
+        // makes the strip independent of any page's visibility.
+        const pages = control._pages()
+        for (let i = 0; i < pages.length; i++) {
+            const page = pages[i]
+            const index = i     // fresh binding per iteration - a `var` here would capture the
+                                // loop variable and give every page the last index
             page.width = Qt.binding(function () { return control.width })
             page.height = Qt.binding(function () { return control.height })
+            page.x = Qt.binding(function () { return index * control._pageStep })
+            page.y = 0
         }
     }
 
@@ -225,13 +238,15 @@ T.Item {
         control._settleTo(target)
     }
 
-    T.Row {
+    // Deliberately a plain Item and not a Row: see _bindPageSizes for why a positioner cannot be
+    // used here. Pages are placed explicitly by index, so `spacing` only feeds _pageStep.
+    T.Item {
 
-        id: pagesRow
+        id: pageStrip
 
         x: control._rowX
+        width: control.width
         height: control.height
-        spacing: control.spacing
 
         data: control.contentChildren
 
