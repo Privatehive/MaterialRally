@@ -65,6 +65,7 @@ qt_add_qml_module(MaterialRally
         MaterialRally/ToolButton.qml
         MaterialRally/SnackBar.qml
         MaterialRally/CollapsibleControl.qml
+        MaterialRally/SwipeView.qml
         MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
         MaterialRally/Helper.qml
         MaterialRally/flingphysics.js

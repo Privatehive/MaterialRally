@@ -89,7 +89,13 @@ Rally.RallyApplicationWindow {
         reloadable: false
         clip: true
 
-        SwipeView {
+        // Rally.SwipeView rather than the stock one: a stock (Flickable-based) horizontal
+        // SwipeView hijacks vertical drags meant for the ScrollView around it, because
+        // QQuickFlickable decides to steal from |dx| alone without ever comparing it to |dy|,
+        // and once it has the grab an ancestor cannot take it back. Rally.SwipeView is
+        // DragHandler-based, and a DragHandler refuses to activate when the drag is mostly
+        // along its disabled axis.
+        Rally.SwipeView {
 
             id: view
             width: parent.width
@@ -100,9 +106,14 @@ Rally.RallyApplicationWindow {
 
                 Loader {
                     id: loader
-                    active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
+                    required property int index
+                    required property string qmlSource
+                    // Rally.SwipeView has no attached isCurrentItem/isNextItem/isPreviousItem -
+                    // compare against currentIndex directly, which is the same "current plus its
+                    // two neighbours" window.
+                    active: Math.abs(loader.index - view.currentIndex) <= 1
                     asynchronous: true
-                    source: Qt.resolvedUrl(qmlSource)
+                    source: Qt.resolvedUrl(loader.qmlSource)
                     visible: status == Loader.Ready
                 }
             }
