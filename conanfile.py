@@ -30,7 +30,7 @@ class MaterialRallyConan(ConanFile):
     tool_requires = ["cmake/[>=3.22.6 <3.31.0]", "ninja/[>=1.11.1]"]
     # ---Sources---
     exports = ["info.json", "LICENSE"]
-    exports_sources = ["info.json", "LICENSE", "*.txt", "doc/*", "src/*", "CMake/*"]
+    exports_sources = ["info.json", "LICENSE", "*.txt", "doc/*", "src/*", "resources/*", "CMake/*"]
     # ---Binary model---
     settings = "os", "compiler", "build_type", "arch"
     options = {"shared": [True, False], "fPIC": [True, False], "lto": [True, False], "doc": [True, False],
@@ -43,6 +43,7 @@ class MaterialRallyConan(ConanFile):
                        "qtappbase/*:qml": True,
                        "qt/*:GUI": True,
                        "qt/*:opengl": "desktop",
+                       "qt/*:vulkan": True,
                        "qt/*:qtbase": True,
                        "qt/*:qtdeclarative": True,
                        "qt/*:qtshadertools": True,
@@ -89,7 +90,7 @@ class MaterialRallyConan(ConanFile):
         tc = CMakeToolchain(self, generator="Ninja")
         tc.variables["CMAKE_INTERPROCEDURAL_OPTIMIZATION"] = self.options.lto
         tc.variables["FEATURE_GALLERY_APP"] = self.options.testapp
-        tc.variables["QT_QML_GENERATE_QMLLS_INI"] = True
+        # tc.variables["QT_QML_GENERATE_QMLLS_INI"] = True
         tc.generate()
         ms.generate()
 

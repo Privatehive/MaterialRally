@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import QtQuick.Controls.Material
 import MaterialRally as Rally
 
-Rally.RallyRootPage {
+Rally.RallyApplicationWindow {
 
     id: root
 
@@ -30,9 +30,16 @@ Rally.RallyRootPage {
             iconName: "list-box"
             qmlSource: "ListsGallery.qml"
         }
+
+        ListElement {
+            title: qsTr("Flickable")
+            iconName: "list-box"
+            qmlSource: "FlickableGallery.qml"
+        }
     }
 
-    header: Rally.ToolBar {
+    header: Rally.ToolBar
+    {
 
         Rally.TabBarFolding {
 
@@ -75,30 +82,38 @@ Rally.RallyRootPage {
         }
     }
 
-    Rally.ScrollView {
+    // TEMPORARY (debugging drag-delay): bypass the outer ScrollView/SwipeView chrome and
+    // load FlickableGallery.qml directly, to test Rally.Flickable without nested legacy
+    // Flickable interference. Restore the block below once done testing.
+    // Rally.ScrollView {
+    //
+    //     anchors.fill: parent
+    //
+    //     reloadable: false
+    //     clip: true
+    //
+    //     SwipeView {
+    //
+    //         id: view
+    //         width: parent.width
+    //
+    //         Repeater {
+    //
+    //             model: mainMenuModel
+    //
+    //             Loader {
+    //                 id: loader
+    //                 active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
+    //                 asynchronous: true
+    //                 source: Qt.resolvedUrl(qmlSource)
+    //                 visible: status == Loader.Ready
+    //             }
+    //         }
+    //     }
+    // }
 
+    Loader {
         anchors.fill: parent
-
-        reloadable: false
-        clip: true
-
-        SwipeView {
-
-            id: view
-            width: parent.width
-
-            Repeater {
-
-                model: mainMenuModel
-
-                Loader {
-                    id: loader
-                    active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
-                    asynchronous: true
-                    source: Qt.resolvedUrl(qmlSource)
-                    visible: status == Loader.Ready
-                }
-            }
-        }
+        source: Qt.resolvedUrl("FlickableGallery.qml")
     }
 }

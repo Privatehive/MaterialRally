@@ -40,6 +40,7 @@ qt_add_qml_module(MaterialRally
         MaterialRally/ListView.qml
         MaterialRally/ItemDelegate.qml
         MaterialRally/ScrollView.qml
+        MaterialRally/Flickable.qml
         MaterialRally/PasswordTextField.qml
         MaterialRally/Divider.qml
         MaterialRally/FormLayout.qml
@@ -66,8 +67,10 @@ qt_add_qml_module(MaterialRally
         MaterialRally/CollapsibleControl.qml
         MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
         MaterialRally/Helper.qml
+        MaterialRally/flingphysics.js
         MaterialRally/private/SizeLabel.qml
         MaterialRally/private/ReloadIndicator.qml
+        MaterialRally/private/EdgeGlow.qml
 
         RESOURCES
         fonts/RobotoMono.ttf
@@ -90,6 +93,7 @@ add_material_icon_theme_resource(MaterialRally THEME_NAME material_private ICONS
         eye-off
         chevron-right
         close
+        content-copy
 )
 
 qt_add_resources(MaterialRally QtQuickControls2 FILES qtquickcontrols2.conf)
@@ -118,6 +122,8 @@ if (FEATURE_GALLERY_APP)
             Gallery/ButtonsGallery.qml
             Gallery/ListsGallery.qml
             Gallery/TestDialog.qml
+            Gallery/DocItem.qml
+            Gallery/FlickableGallery.qml
     )
 
     target_link_libraries(RallyGallery
@@ -137,6 +143,19 @@ if (FEATURE_GALLERY_APP)
     add_material_icon_theme_resource(MaterialRally THEME_NAME material ICONS
             button-cursor
             list-box
+    )
+
+    register_icon(RallyGallery
+            ICO "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery.ico"
+            ICNS "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery.icns"
+            SCALABLE "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery.svg"
+            MIPMAPS_FOLDER "${CMAKE_SOURCE_DIR}/resources/icons/android/res"
+            512x512 "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery_512.png"
+            256x256 "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery_256.png"
+            128x128 "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery_128.png"
+            64x64 "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery_64.png"
+            48x48 "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery_48.png"
+            32x32 "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery_32.png"
     )
 
     install_app(RallyGallery)
