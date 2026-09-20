@@ -14,20 +14,9 @@ int main(int argc, char **argv) {
 
 	qputenv("QSG_INFO", "1");
 
-	// QQuickWindow::setGraphicsApi(QSGRendererInterface::Vulkan);
-
 	QtApplicationBase<QGuiApplication> app(argc, argv);
 	AdvancedQmlApplicationEngine qmlEngine;
 	QIcon::setThemeName("material");
-
-	QObject::connect(
-	 &qmlEngine, &AdvancedQmlApplicationEngine::presenting, &app,
-	 []() {
-#ifdef Q_OS_ANDROID
-		 QNativeInterface::QAndroidApplication::hideSplashScreen(250);
-#endif
-	 },
-	 Qt::QueuedConnection);
 
 #ifdef QT_DEBUG
 	auto qmlMainFile = QString("Gallery/Gallery/main.qml");

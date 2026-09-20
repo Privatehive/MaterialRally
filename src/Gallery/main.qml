@@ -9,10 +9,10 @@ Rally.RallyApplicationWindow {
 
     id: root
 
-    SafeArea.additionalMargins.bottom: 40
-    SafeArea.additionalMargins.left: 40
-    SafeArea.additionalMargins.right: 40
-    SafeArea.additionalMargins.top: 40
+    //SafeArea.additionalMargins.bottom: 40
+    //SafeArea.additionalMargins.left: 40
+    //SafeArea.additionalMargins.right: 40
+    //SafeArea.additionalMargins.top: 40
 
     ListModel {
 
@@ -82,38 +82,30 @@ Rally.RallyApplicationWindow {
         }
     }
 
-    // TEMPORARY (debugging drag-delay): bypass the outer ScrollView/SwipeView chrome and
-    // load FlickableGallery.qml directly, to test Rally.Flickable without nested legacy
-    // Flickable interference. Restore the block below once done testing.
-    // Rally.ScrollView {
-    //
-    //     anchors.fill: parent
-    //
-    //     reloadable: false
-    //     clip: true
-    //
-    //     SwipeView {
-    //
-    //         id: view
-    //         width: parent.width
-    //
-    //         Repeater {
-    //
-    //             model: mainMenuModel
-    //
-    //             Loader {
-    //                 id: loader
-    //                 active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
-    //                 asynchronous: true
-    //                 source: Qt.resolvedUrl(qmlSource)
-    //                 visible: status == Loader.Ready
-    //             }
-    //         }
-    //     }
-    // }
+    Rally.ScrollView {
 
-    Loader {
         anchors.fill: parent
-        source: Qt.resolvedUrl("FlickableGallery.qml")
+
+        reloadable: false
+        clip: true
+
+        SwipeView {
+
+            id: view
+            width: parent.width
+
+            Repeater {
+
+                model: mainMenuModel
+
+                Loader {
+                    id: loader
+                    active: SwipeView.isCurrentItem || SwipeView.isNextItem || SwipeView.isPreviousItem
+                    asynchronous: true
+                    source: Qt.resolvedUrl(qmlSource)
+                    visible: status == Loader.Ready
+                }
+            }
+        }
     }
 }

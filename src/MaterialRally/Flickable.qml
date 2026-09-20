@@ -1,6 +1,5 @@
 import QtQml
 import QtQuick as T
-import MaterialRally as Rally
 import "./private" as RallyPrivate
 import "flingphysics.js" as FlingPhysics
 
@@ -303,6 +302,9 @@ T.Item {
     }
 
     function _wheelStep(dx, dy, animate) {
+        // Wheel input drives contentX/contentY directly (or via wheelAnimX/Y below); make sure
+        // it isn't fighting a still-running touch-originated fling over the same properties.
+        control._cancelFling()
         var maxX = Math.max(0, control.contentWidth - control.width)
         var maxY = Math.max(0, control.contentHeight - control.height)
         var targetX = control._clamp(control.contentX + dx, 0, maxX)
@@ -382,7 +384,11 @@ T.Item {
 
         target: null
         enabled: control.interactive
-        acceptedButtons: Rally.RootItem.isTouchInput ? Qt.LeftButton : Qt.NoButton
+        // Mouse/touchpad users only scroll via the wheel (see wheelHandler below) - dragging to
+        // pan/flick is a touch (and stylus) gesture only. This is a hard device-type exclusion,
+        // not the Rally.RootItem.isTouchInput heuristic (which tracks "which input was used
+        // most recently" and can lag/misfire); acceptedDevices is deterministic per-gesture.
+        acceptedDevices: T.PointerDevice.AllDevices & ~T.PointerDevice.Mouse & ~T.PointerDevice.TouchPad
         xAxis.enabled: (control.flickableDirection & T.Flickable.HorizontalFlick) !== 0
         yAxis.enabled: (control.flickableDirection & T.Flickable.VerticalFlick) !== 0
 
@@ -452,7 +458,9 @@ T.Item {
         id: tapToStopHandler
 
         enabled: control.interactive
-        acceptedButtons: Rally.RootItem.isTouchInput ? Qt.LeftButton : Qt.NoButton
+        // Matches dragHandler's device restriction: a fling only ever starts from a touch/stylus
+        // drag, so only touch/stylus presses need to be able to stop one.
+        acceptedDevices: T.PointerDevice.AllDevices & ~T.PointerDevice.Mouse & ~T.PointerDevice.TouchPad
 
         onPressedChanged: {
             if (tapToStopHandler.pressed)
