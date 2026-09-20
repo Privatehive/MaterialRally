@@ -65,12 +65,6 @@ T.GroupBox {
 
     clip: true
 
-    TapHandler {
-        onTapped: {
-            control.focus = false
-        }
-    }
-
     background: Rectangle {
         width: parent.width
         height: parent.height
@@ -136,8 +130,8 @@ T.GroupBox {
                         anchors.fill: parent
                         onClicked: {
                             const dialog = Helper.createDialog("InfoDialog.qml", control, {
-                                                                   "text": control.infoText
-                                                               })
+                                "text": control.infoText
+                            })
                         }
                     }
                 }
