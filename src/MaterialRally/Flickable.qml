@@ -59,6 +59,29 @@ T.Item {
     property bool synchronousDrag: true
 
     /*!
+      \qmlproperty int Flickable::dragThreshold
+      \default 8
+
+      How far, in px, a finger must travel before a drag starts. Below it the press is left
+      entirely to whatever is underneath, so a tap on a control inside the content still works.
+      This is the dead zone at the start of a gesture: nothing moves until it is crossed (with
+      \l synchronousDrag the travel is then replayed, so it costs no offset - only the delay
+      before movement begins).
+
+      Deliberately 8 rather than Qt's Qt.styleHints.startDragDistance, which is a generic
+      hardcoded 10 on every platform: QAndroidPlatformIntegration::styleHint() does not handle
+      StartDragDistance, so it falls through to QPlatformTheme::defaultThemeHint()'s QVariant(10).
+      Since Qt's Android HiDPI scaling makes 1 logical px behave as 1 dp, that is a 25% wider dead
+      zone than native Android, whose ViewConfiguration touch slop is 8dp - which is why scrolling
+      felt less immediate here than in an Android app. 8 matches the platform we take the rest of
+      our fling physics from.
+
+      Set to -1 to fall back to Qt.styleHints.startDragDistance, or raise it if content with small
+      tap targets is picking up accidental scrolls.
+    */
+    property int dragThreshold: 8
+
+    /*!
       \qmlproperty int Flickable::flickableDirection
       \default Flickable.VerticalFlick
 
@@ -592,6 +615,9 @@ T.Item {
         // not the Rally.RootItem.isTouchInput heuristic (which tracks "which input was used
         // most recently" and can lag/misfire); acceptedDevices is deterministic per-gesture.
         acceptedDevices: T.PointerDevice.AllDevices & ~T.PointerDevice.Mouse & ~T.PointerDevice.TouchPad
+        // A negative value is how QQuickPointerHandler spells "use the style hint", so
+        // dragThreshold: -1 on the Flickable falls back to Qt.styleHints.startDragDistance.
+        dragThreshold: control.dragThreshold
         xAxis.enabled: control._canFlickX
         yAxis.enabled: control._canFlickY
 
