@@ -1,0 +1,12 @@
+# A fling that runs into the edge shows exactly one absorb glow.
+load ../scenes/FlickableScene.qml
+eval flick.contentY = flick.contentHeight - flick.height - 300
+# Records each time the bottom glow starts rising, and whether a pull or an absorb raised it
+eval (function(){ var g = H.find("bottomGlow", flick); var a = H.find("absorbAnim", g); var log = []; H.set("log", log); var last = -1; g.pullChanged.connect(function(){ var up = g.pull > last; if ((up ? "up" : "down") !== H.get("dir")) { if (up) log.push(a.running ? "absorb" : "pull"); H.set("dir", up ? "up" : "down") } last = g.pull }) })()
+
+swipe 200 600 200 450 60
+expect flick.flicking
+wait 2500
+eval H.get("log").join(" ")
+expect H.get("log").join(" ") === "absorb"
+expect flick.contentY === 3200

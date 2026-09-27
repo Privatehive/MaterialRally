@@ -437,6 +437,12 @@ T.Item {
         const maxValue = Math.max(0, control[contentSizeProp] - control[sizeProp])
         const rawTarget = control[contentProp] - dist
         const target = control._clamp(rawTarget, 0, maxValue)
+        // Already at the bound this fling points towards: nothing to fling. Starting one anyway
+        // ran a zero-duration fling whose single frame fired the absorb glow, right after the glow
+        // pulled by the drag had receded - the edge indicator showed up twice. Android's
+        // ScrollView doesn't fling here either (flingWithNestedDispatch's canFling).
+        if (target === control[contentProp])
+            return
 
         // If the bound clips the target short of the full computed distance, shorten the
         // duration by the same fraction. Our curve's shape only depends on distance/duration
