@@ -674,17 +674,27 @@ T.Item {
         // applying activeTranslation deltas counted that travel twice. Scene coordinates are
         // deliberate - centroid.position is relative to the handler's parent item, which for a
         // nested Flickable moves with the outer content.
+        //
+        // The origin is _anchorX/_anchorY (see onCentroidChanged), not centroid.scenePressPosition:
+        // QQuickHandlerPoint only records a press position when it sees the point in the Pressed
+        // state. A handler can pick a finger up later - a second finger lands before the first
+        // has started a drag, then the first lifts, and the handler switches to the second - and
+        // scenePressPosition is then left at (0,0), which made the content jump by the finger's
+        // whole scene position. activeTranslation derives from the same value, so it is no help.
         property real _appliedX: 0
         property real _appliedY: 0
+        property int _anchorId: -1
+        property real _anchorPressX: 0
+        property real _anchorPressY: 0
+        property real _anchorX: 0
+        property real _anchorY: 0
 
         function _travelX(): real {
-            const c = dragHandler.centroid
-            return control._canFlickX ? c.scenePosition.x - c.scenePressPosition.x : 0
+            return control._canFlickX ? dragHandler.centroid.scenePosition.x - dragHandler._anchorX : 0
         }
 
         function _travelY(): real {
-            const c = dragHandler.centroid
-            return control._canFlickY ? c.scenePosition.y - c.scenePressPosition.y : 0
+            return control._canFlickY ? dragHandler.centroid.scenePosition.y - dragHandler._anchorY : 0
         }
 
         // Applies whatever finger travel since press has not been applied yet.
@@ -727,8 +737,26 @@ T.Item {
         // Only the fling is cancelled, not a running rebound: a rebound is driven by _overshootY,
         // and stopping it on press with no matching release signal (this fires before the handler
         // is active, so onActiveChanged may never run) would strand the owner's stretch.
+        //
+        // It also anchors the travel measurement (see _travelX) at the first scene position seen
+        // for a point: its press position for a normal press, and where the finger was at the
+        // hand-over for a finger picked up late. A new point is recognised by its id changing or
+        // by its press position changing - ids are reused from one gesture to the next, and a
+        // handler that never activated keeps the previous gesture's id in its centroid. A finger
+        // picked up late changes only the id, since its press position is never updated.
+        // centroidChanged is emitted before the handler activates and before activeTranslation
+        // changes, so the anchor is always set in time.
         onCentroidChanged: {
-            if (flickTicker.flingAxis !== 0 && dragHandler.centroid.id !== -1)
+            const c = dragHandler.centroid
+            const p = c.scenePressPosition
+            if (c.id !== dragHandler._anchorId || p.x !== dragHandler._anchorPressX || p.y !== dragHandler._anchorPressY) {
+                dragHandler._anchorId = c.id
+                dragHandler._anchorPressX = p.x
+                dragHandler._anchorPressY = p.y
+                dragHandler._anchorX = c.scenePosition.x
+                dragHandler._anchorY = c.scenePosition.y
+            }
+            if (flickTicker.flingAxis !== 0 && c.id !== -1)
                 control._cancelFling()
         }
     }

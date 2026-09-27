@@ -329,9 +329,19 @@ T.Item {
             }
         }
 
+        // Travel is measured from the first scene position seen for the point, not from
+        // activeTranslation: that derives from centroid.scenePressPosition, which Qt leaves at
+        // (0,0) for a finger the handler picks up after its press (a second finger landing before
+        // the first starts a swipe, then the first lifting), and the pages then jumped by the
+        // finger's whole scene x. Same fix as Rally.Flickable - see its dragHandler._travelX.
+        property int _anchorId: -1
+        property real _anchorPressX: 0
+        property real _anchorPressY: 0
+        property real _anchorX: 0
+
         onActiveTranslationChanged: {
             const tr = dragHandler._tracker
-            const tx = dragHandler.activeTranslation.x
+            const tx = dragHandler.centroid.scenePosition.x - dragHandler._anchorX
             const dx = tx - tr.lastX
             tr.record(tx, 0)
             control._applyPageDrag(dx)
@@ -343,8 +353,18 @@ T.Item {
         // point that already has an exclusive grabber. Guarding on centroid.id rather than
         // centroid.pressedButtons matters - pressedButtons is Qt.NoButton for touch, so the
         // earlier `pressedButtons !== 0` test never fired for the only input this handler accepts.
+        // Also anchors the travel measurement - see Rally.Flickable's dragHandler.onCentroidChanged
+        // for how a new point is recognised.
         onCentroidChanged: {
-            if (settleAnim.running && dragHandler.centroid.id !== -1)
+            const c = dragHandler.centroid
+            const p = c.scenePressPosition
+            if (c.id !== dragHandler._anchorId || p.x !== dragHandler._anchorPressX || p.y !== dragHandler._anchorPressY) {
+                dragHandler._anchorId = c.id
+                dragHandler._anchorPressX = p.x
+                dragHandler._anchorPressY = p.y
+                dragHandler._anchorX = c.scenePosition.x
+            }
+            if (settleAnim.running && c.id !== -1)
                 settleAnim.stop()
         }
     }
