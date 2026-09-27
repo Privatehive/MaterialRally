@@ -1,4 +1,4 @@
-find_package(Qt6 REQUIRED COMPONENTS Gui GuiPrivate Quick Qml)
+find_package(Qt6 REQUIRED COMPONENTS Gui GuiPrivate Quick Qml QuickControls2)
 
 qt_add_executable(RallyHarness main.cpp)
 set_target_properties(RallyHarness PROPERTIES AUTOMOC ON)
