@@ -1,0 +1,28 @@
+# The ScrollView's ScrollBar stays passive under touch: a finger on it drags the content like
+# anywhere else, and the bar never becomes interactive.
+load ../scenes/ScrollViewScene.qml
+
+eval H.set("flick", H.find("flickable", scroll)); H.set("bar", H.find("scrollBar", scroll))
+
+# After a mouse was used the bar is interactive...
+mmove 200 400
+expect Rally.RootItem.isMouseInput && H.get("bar").interactive
+
+# ...but the first touch switches it off before the press reaches it.
+down 396 700
+expect !Rally.RootItem.isMouseInput && !H.get("bar").interactive && !H.get("bar").pressed
+
+# A finger held on the bar while the content scrolls. Qt Quick re-sends a hover under the finger
+# on every changed frame, carrying its mouse device; that used to flip the input to "mouse" and
+# made the bar interactive mid-gesture.
+move 396 600
+wait 30
+move 396 500
+wait 30
+move 396 400
+wait 100
+expect !Rally.RootItem.isMouseInput && !H.get("bar").interactive && !H.get("bar").pressed
+expect H.get("flick").dragging && H.get("flick").contentY === 300
+up 396 400
+wait 3000
+expect !Rally.RootItem.isMouseInput && !H.get("bar").interactive

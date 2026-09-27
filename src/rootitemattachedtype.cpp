@@ -13,21 +13,12 @@ bool InputEventFilter::eventFilter(QObject *obj, QEvent *event) {
 	bool isTouchInput = mIsTouch;
 
 	switch(event->type()) {
-		case QEvent::HoverEnter:
-		case QEvent::HoverLeave:
-		case QEvent::HoverMove: {
-			auto *hv = static_cast<QHoverEvent *>(event);
-			if(hv->device()) {
-				if(hv->device()->type() == QInputDevice::DeviceType::Mouse) {
-					isTouchInput = false;
-				} else if(hv->device()->type() == QInputDevice::DeviceType::TouchPad) {
-					isTouchInput = false;
-				} else {
-					isTouchInput = true;
-				}
-			}
-			break;
-		}
+		// Hover events are deliberately ignored. Qt Quick synthesizes them itself: while a finger
+		// is down it keeps the touch point as its "last mouse position" and, on every frame in
+		// which something changed, re-sends a hover there (QQuickDeliveryAgent's frame-synchronous
+		// hover) - carrying the primary pointing device, which is a mouse. Counting those flipped
+		// a scrolling finger to "mouse" and, e.g., made the ScrollView's scroll bar grab the touch.
+		// A real mouse or touchpad always shows up as MouseMove below as well.
 		case QEvent::MouseButtonPress:
 		case QEvent::MouseMove:
 		case QEvent::MouseButtonRelease: {
@@ -71,7 +62,11 @@ RootItemAttachedType::RootItemAttachedType(QObject *parent) {
 		mpInputDetector = new InputEventFilter(isTouch, QCoreApplication::instance());
 		QCoreApplication::instance()->installEventFilter(mpInputDetector);
 	}
-	connect(mpInputDetector, &InputEventFilter::touchInputChanged, this, &RootItemAttachedType::inputChanged, Qt::QueuedConnection);
+	// Direct, so bindings on isTouchInput/isMouseInput update before the event that changed it is
+	// delivered - an application event filter runs ahead of delivery, and only ever for objects in
+	// the main thread. Queued, the first touch after using a mouse still reached controls in their
+	// mouse configuration (e.g. an interactive ScrollBar).
+	connect(mpInputDetector, &InputEventFilter::touchInputChanged, this, &RootItemAttachedType::inputChanged, Qt::DirectConnection);
 	mMutex.unlock();
 }
 

@@ -3,7 +3,7 @@
 // Runs on the "offscreen" QPA platform (no display server needed), injects touch through
 // QWindowSystemInterface (the same path a real touch driver takes, so DragHandler & co. see a
 // genuine TouchScreen device), and executes a line-based script. Moves are paced in real time
-// because Rally's VelocityTracker samples Date.now().
+// because Rally's VelocityTracker timestamps samples with a real clock.
 //
 // Usage: RallyHarness [-c CMD]... [SCRIPT | -]...
 //
@@ -17,6 +17,8 @@
 //   drag X1 Y1 X2 Y2 MS [HZ]    press, then move linearly over MS at HZ (default 120); no release
 //   swipe X1 Y1 X2 Y2 MS [HZ]   drag + release at the end point
 //   click X Y                   mouse click (left button)
+//   mdown X Y / mup X Y         mouse press / release (left button)
+//   mmove X Y                   mouse move: a hover, or a mouse drag between mdown and mup
 //   wheel X Y DY [DX]           mouse wheel, in angle-delta units (120 = one notch)
 //   shot FILE                   save a screenshot (PNG, path relative to the working directory)
 //   eval EXPR                   evaluate JS with the root object as scope and print the result
@@ -138,6 +140,7 @@ public:
 	QPointingDevice *touch = nullptr;
 	QElapsedTimer clock;
 	QHash<int, QPointF> activePoints;
+	Qt::MouseButtons mouseButtons = Qt::NoButton;
 	bool failed = false;
 	QDir baseDir;
 
@@ -234,6 +237,12 @@ public:
 			sendTouch(0, QEventPoint::State::Updated, from + (to - from) * (qreal(i) / steps));
 		}
 		if (release) sendTouch(0, QEventPoint::State::Released, to);
+	}
+
+	void sendMouse(QPointF pos, Qt::MouseButtons buttons, Qt::MouseButton button, QEvent::Type type) {
+		QWindowSystemInterface::handleMouseEvent<QWindowSystemInterface::SynchronousDelivery>(
+		    window, ulong(clock.elapsed()), pos, window->mapToGlobal(pos), buttons, button, type);
+		mouseButtons = buttons;
 	}
 
 	void mouseClick(QPointF pos) {
@@ -352,6 +361,12 @@ public:
 			drag(pt(0), pt(2), int(num(4)), int(num(5, 120)), cmd == QLatin1String("swipe"));
 		} else if (cmd == QLatin1String("click")) {
 			mouseClick(pt(0));
+		} else if (cmd == QLatin1String("mdown")) {
+			sendMouse(pt(0), Qt::LeftButton, Qt::LeftButton, QEvent::MouseButtonPress);
+		} else if (cmd == QLatin1String("mmove")) {
+			sendMouse(pt(0), mouseButtons, Qt::NoButton, QEvent::MouseMove);
+		} else if (cmd == QLatin1String("mup")) {
+			sendMouse(pt(0), Qt::NoButton, Qt::LeftButton, QEvent::MouseButtonRelease);
 		} else if (cmd == QLatin1String("wheel")) {
 			const QPointF pos = pt(0);
 			QWindowSystemInterface::handleWheelEvent(window, ulong(clock.elapsed()), pos, window->mapToGlobal(pos),
