@@ -1,0 +1,39 @@
+# Resizing keeps the current page exactly in view. The strip used to be laid out for the old
+# width, leaving the current page shifted by the size difference - two half pages side by side.
+load ../scenes/SwipeInScrollScene.qml
+
+eval view.currentIndex = 1
+wait 500
+size 600 800
+wait 100
+expect view.width === 600 && H.rect(view.currentItem).x === 0
+size 300 800
+wait 100
+expect view.width === 300 && H.rect(view.currentItem).x === 0
+
+# Resized while settling after a programmatic page change.
+size 400 800
+wait 100
+eval view.currentIndex = 2
+wait 50
+size 600 800
+wait 600
+expect H.rect(view.currentItem).x === 0
+
+# Resized while settling after a swipe.
+eval view.currentIndex = 0
+wait 600
+swipe 500 400 100 400 150
+wait 30
+size 400 800
+wait 600
+eval view.currentIndex
+expect view.currentIndex === 1 && H.rect(view.currentItem).x === 0
+
+# Resized mid-drag: the swipe carries on and still settles onto a page.
+drag 300 400 150 400 150
+size 600 800
+wait 50
+up 150 400
+wait 600
+expect H.rect(view.currentItem).x === 0

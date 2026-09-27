@@ -153,9 +153,27 @@ T.Item {
     // release-time drag position (see _commitDragEnd for why).
     property int _dragStartIndex: 0
 
-    onWidthChanged: {
-        if (!control._dragging && !settleAnim.running)
-            control._rowX = -control.currentIndex * control._pageStep
+    // The _pageStep that _rowX was last laid out for, so a resize mid-drag can rescale it.
+    property real _laidOutStep: 0
+
+    // Keeps the current page aligned when the width (or spacing) changes. This has to follow
+    // _pageStep rather than width: an onWidthChanged handler can run before _pageStep's own
+    // binding has caught up, and then laid the strip out for the old width - the current page
+    // ended up shifted by the size difference, showing parts of two pages side by side.
+    //
+    // A running settle is cut short and the strip snapped into place, since the animation's
+    // target was computed for the old width. Mid-drag the strip is rescaled instead, so the
+    // swipe carries on from the same fraction of a page (e.g. a phone rotated mid-swipe).
+    on_PageStepChanged: {
+        const oldStep = control._laidOutStep
+        control._laidOutStep = control._pageStep
+        if (control._dragging) {
+            if (oldStep > 0)
+                control._rowX = control._rowX * control._pageStep / oldStep
+            return
+        }
+        settleAnim.stop()
+        control._rowX = -control.currentIndex * control._pageStep
     }
 
     // Guarded on _pageStep > 0: during initial construction, custom properties like
