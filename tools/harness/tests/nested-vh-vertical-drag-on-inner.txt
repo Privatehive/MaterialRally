@@ -1,0 +1,9 @@
+# A vertical drag on the list scrolls the list; the pager does not move.
+load ../scenes/NestedVerticalInHorizontalScene.qml
+
+drag 200 600 200 350 400
+wait 50
+eval [outer.contentX, list.contentY]
+expect Math.abs(list.contentY - 250) < 1
+expect outer.contentX === 0 && !outer.dragging
+up

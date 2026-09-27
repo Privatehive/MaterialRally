@@ -1,0 +1,10 @@
+# The inverse nesting: a horizontal drag that starts on the vertical list scrolls the horizontal
+# pager around it; the list does not move.
+load ../scenes/NestedVerticalInHorizontalScene.qml
+
+drag 350 400 100 400 400
+wait 50
+eval [outer.contentX, list.contentY]
+expect Math.abs(outer.contentX - 250) < 1
+expect list.contentY === 0 && !list.dragging
+up

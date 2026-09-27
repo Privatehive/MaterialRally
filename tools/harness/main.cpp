@@ -24,6 +24,9 @@
 //   at X Y                      print the item stack under a point
 //   tree [DEPTH]                print the visible item tree with ids and scene geometry
 //
+// In every command except eval/expect, `{EXPR}` is replaced by the value of the JS expression, so
+// a gesture can target an item wherever it currently is: `down 200 {H.rect(list).y + 50}`.
+//
 // Qt Quick merges touch moves that arrive between two frames, as it does on a device. Put a short
 // `wait` after a `move` whose exact position must be seen on its own (e.g. the one that crosses a
 // drag threshold).
@@ -31,9 +34,10 @@
 // Relative paths in `load` resolve against the script's directory (the working directory for -c).
 //
 // In eval/expect, the root object is the scope, plus a helper object `H`:
-//   H.find(name [, within])   first object whose QML id or objectName matches, searching the whole
-//                             scene or only below `within` (ids are not unique across components,
-//                             e.g. every Rally.ScrollView has an internal #flickable)
+//   H.find(name [, within])   nearest (breadth-first) object whose QML id or objectName matches,
+//                             searching the whole scene or only below `within` (ids are not unique
+//                             across components, e.g. every Rally.ScrollView has an internal
+//                             #flickable)
 //   H.ancestor(item, name)    nearest ancestor of `item` whose id or objectName matches
 //   H.rect(item)              the item's scene rectangle
 //   H.set(key, value)         remember a value for a later command (e.g. a position to compare)
@@ -55,6 +59,7 @@
 #include <QQmlExpression>
 #include <QQuickItem>
 #include <QQuickWindow>
+#include <QRegularExpression>
 #include <QTextStream>
 #include <QTimer>
 #include <QWheelEvent>
@@ -106,17 +111,19 @@ private:
 		return ctx && ctx->nameForObject(obj) == name;
 	}
 
-	static QObject *find(QObject *obj, const QString &name) {
-		if (!obj) return nullptr;
-		if (matches(obj, name)) return obj;
-		// Visual children are not necessarily QObject children, so walk both.
-		if (auto *item = qobject_cast<QQuickItem *>(obj)) {
-			for (auto *child : item->childItems())
-				if (auto *hit = find(child, name)) return hit;
-		}
-		for (auto *child : obj->children()) {
-			if (qobject_cast<QQuickItem *>(child)) continue; // already covered above
-			if (auto *hit = find(child, name)) return hit;
+	static QObject *find(QObject *start, const QString &name) {
+		QList<QObject *> queue{start};
+		QSet<QObject *> seen;
+		while (!queue.isEmpty()) {
+			QObject *obj = queue.takeFirst();
+			if (!obj || seen.contains(obj)) continue;
+			seen.insert(obj);
+			if (matches(obj, name)) return obj;
+			// Visual children are not necessarily QObject children, so walk both.
+			if (auto *item = qobject_cast<QQuickItem *>(obj)) {
+				for (auto *child : item->childItems()) queue.append(child);
+			}
+			queue.append(obj->children());
 		}
 		return nullptr;
 	}
@@ -258,7 +265,12 @@ public:
 			const QPointF p = v.toPointF();
 			return QStringLiteral("point(%1, %2)").arg(p.x()).arg(p.y());
 		}
-		if (v.metaType().id() == QMetaType::QVariantList || v.metaType().id() == QMetaType::QVariantMap)
+		if (v.metaType().id() == QMetaType::QVariantList) {
+			QStringList parts;
+			for (const QVariant &e : v.toList()) parts << format(e);
+			return QLatin1Char('[') + parts.join(QStringLiteral(", ")) + QLatin1Char(']');
+		}
+		if (v.metaType().id() == QMetaType::QVariantMap)
 			return QString::fromUtf8(QJsonDocument::fromVariant(v).toJson(QJsonDocument::Compact));
 		return v.isValid() ? v.toString() : QStringLiteral("undefined");
 	}
@@ -288,11 +300,27 @@ public:
 		for (auto *child : item->childItems()) printTree(child, depth + 1, maxDepth);
 	}
 
+	// Replaces each {EXPR} in `line` with its evaluated value.
+	bool expand(QString &line) {
+		static const QRegularExpression braces(QStringLiteral("\\{([^{}]*)\\}"));
+		for (auto m = braces.match(line); m.hasMatch(); m = braces.match(line)) {
+			bool ok = false;
+			const QVariant v = rootObject ? evaluate(m.captured(1), &ok) : QVariant();
+			if (!ok) {
+				err << "error: cannot expand " << m.captured(0) << "\n";
+				return false;
+			}
+			line.replace(m.capturedStart(), m.capturedLength(), format(v));
+		}
+		return true;
+	}
+
 	// Returns false only on a malformed command; assertion failures set `failed` instead.
 	bool run(const QString &line) {
-		const QString trimmed = line.section(QLatin1Char('#'), 0, 0).trimmed();
+		QString trimmed = line.section(QLatin1Char('#'), 0, 0).trimmed();
 		if (trimmed.isEmpty()) return true;
 		const QString cmd = trimmed.section(QLatin1Char(' '), 0, 0);
+		if (cmd != QLatin1String("eval") && cmd != QLatin1String("expect") && !expand(trimmed)) return false;
 		const QString rest = trimmed.section(QLatin1Char(' '), 1).trimmed();
 		const QStringList a = rest.split(QLatin1Char(' '), Qt::SkipEmptyParts);
 		auto num = [&](int i, qreal def = 0) { return i < a.size() ? a[i].toDouble() : def; };

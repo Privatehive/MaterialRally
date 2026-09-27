@@ -1,0 +1,8 @@
+# A fast horizontal swipe over the list flings the pager, and the list stays where it was.
+load ../scenes/NestedVerticalInHorizontalScene.qml
+
+swipe 350 400 150 410 80
+expect outer.flicking
+wait 3000
+eval [outer.contentX, list.contentY]
+expect !outer.flicking && outer.contentX > 200 && list.contentY === 0
