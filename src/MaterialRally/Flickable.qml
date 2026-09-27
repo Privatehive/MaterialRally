@@ -38,10 +38,27 @@ T.Item {
     property
         list < QtObject > flickableChildren
 
+    /*!
+      \qmlproperty real Flickable::contentX
+      \qmlproperty real Flickable::contentY
+
+      The position of the content. Writing either from outside stops whatever is moving the
+      content along that axis - a fling, a rebound or a wheel animation - as stock's
+      setContentX()/setContentY() do. Writing it during a drag moves the content without the drag
+      snapping it back on the next touch move.
+    */
     property real contentX: 0
     property real contentY: 0
     property real contentWidth: width
     property real contentHeight: height
+
+    /*!
+      \qmlproperty Item Flickable::contentItem
+
+      The item that holds the content and moves as it scrolls, like stock's contentItem. Parent
+      items to it to add content at runtime, or map coordinates to and from it.
+    */
+    readonly property T.Item contentItem: flickableContent
 
     property bool interactive: true
 
@@ -84,7 +101,11 @@ T.Item {
       \qmlproperty int Flickable::flickableDirection
       \default Flickable.VerticalFlick
 
-      One of Flickable.HorizontalFlick, Flickable.VerticalFlick or Flickable.HorizontalAndVerticalFlick.
+      One of Flickable.HorizontalFlick, Flickable.VerticalFlick, Flickable.HorizontalAndVerticalFlick,
+      Flickable.AutoFlickDirection or Flickable.AutoFlickIfNeeded, with the same meaning as on
+      QtQuick's Flickable: AutoFlickDirection flicks along an axis whose content size differs from
+      the Flickable's, AutoFlickIfNeeded along an axis whose content is larger (it can also be
+      combined with the other flags). Unlike stock, the default is VerticalFlick.
     */
     property int flickableDirection: T.Flickable.VerticalFlick
 
@@ -180,6 +201,18 @@ T.Item {
     */
     readonly property real verticalOvershoot: control._overshootY
 
+    /*!
+      \qmlproperty real Flickable::horizontalVelocity
+      \qmlproperty real Flickable::verticalVelocity
+
+      How fast the content is moving, in px/s: positive while contentX/contentY grows, the same
+      sign as QtQuick.Flickable. While dragging this is the finger's velocity over the last 60 ms
+      (see VelocityTracker), during a fling the fling's current speed, and 0 otherwise - a rebound
+      or a wheel scroll reports 0.
+    */
+    readonly property real horizontalVelocity: control._velocityX
+    readonly property real verticalVelocity: control._velocityY
+
     // Not readonly: the rebound animations below drive these. Deliberately not named with a
     // leading underscore - QML would then expect on_ReboundingChanged handlers.
     property bool reboundingHorizontally: false
@@ -192,9 +225,9 @@ T.Item {
     readonly property bool atYEnd: contentY >= control._maxContentY
 
     readonly property bool draggingHorizontally: dragHandler.active && control._dragAxis !== "y"
-        && control._canFlickX
+        && control._scrollableX
     readonly property bool draggingVertically: dragHandler.active && control._dragAxis !== "x"
-        && control._canFlickY
+        && control._scrollableY
     readonly property bool dragging: draggingHorizontally || draggingVertically
 
     readonly property bool flickingHorizontally: flickTicker.flingAxis === T.Flickable.HorizontalFlick
@@ -235,8 +268,13 @@ T.Item {
     // Qt.styleHints.startDragDistance keeps this in step with the handler that actually gates the
     // gesture, including when a caller overrides it.
     readonly property real _dragThreshold: dragHandler.dragThreshold
-    readonly property bool _canFlickX: (flickableDirection & T.Flickable.HorizontalFlick) !== 0
-    readonly property bool _canFlickY: (flickableDirection & T.Flickable.VerticalFlick) !== 0
+    // Stock's xflick()/yflick(), including its AutoFlickDirection test of the whole-pixel difference.
+    readonly property bool _canFlickX: ((flickableDirection & T.Flickable.AutoFlickIfNeeded) !== 0 && contentWidth > width)
+        || (flickableDirection === T.Flickable.AutoFlickDirection ? Math.abs(contentWidth - width) >= 1
+                                                                   : (flickableDirection & T.Flickable.HorizontalFlick) !== 0)
+    readonly property bool _canFlickY: ((flickableDirection & T.Flickable.AutoFlickIfNeeded) !== 0 && contentHeight > height)
+        || (flickableDirection === T.Flickable.AutoFlickDirection ? Math.abs(contentHeight - height) >= 1
+                                                                   : (flickableDirection & T.Flickable.VerticalFlick) !== 0)
     readonly property real _maxContentX: Math.max(0, contentWidth - width)
     readonly property real _maxContentY: Math.max(0, contentHeight - height)
     // An axis this Flickable both may and can scroll along. Along any other axis it leaves drags
@@ -257,6 +295,114 @@ T.Item {
     property real _overshootY: 0
     property real _reboundMidX: 0
     property real _reboundMidY: 0
+    property real _velocityX: 0
+    property real _velocityY: 0
+
+    // The last value this Flickable itself wrote to contentX/contentY. Any other change came from
+    // outside - see onContentXChanged. Every internal write goes through _setContentX/Y for this.
+    property real _ownContentX: 0
+    property real _ownContentY: 0
+
+    // What the wheel and returnToBounds() animations animate. They cannot target contentX/Y
+    // directly, since their writes would then look like writes from outside.
+    property real _wheelX: 0
+    property real _wheelY: 0
+    property real _fixupX: 0
+    property real _fixupY: 0
+    property real _fixupMidX: 0
+    property real _fixupMidY: 0
+    property real _fixupEndX: 0
+    property real _fixupEndY: 0
+
+    function _setContentX(value: real) {
+        control._ownContentX = value
+        control.contentX = value
+    }
+
+    function _setContentY(value: real) {
+        control._ownContentY = value
+        control.contentY = value
+    }
+
+    onContentXChanged: {
+        if (control.contentX !== control._ownContentX)
+            control._takeExternalContentX()
+    }
+
+    onContentYChanged: {
+        if (control.contentY !== control._ownContentY)
+            control._takeExternalContentY()
+    }
+
+    // A write from outside - a binding, a scroll bar, "scroll to top" - wins over whatever was
+    // moving the content along that axis, as stock's setContentX() does via resetTimeline().
+    // Mid-drag the drag carries on from the new position rather than snapping back to where the
+    // finger would have put it. Stock does snap back, since its drag() works from the press
+    // position, but that throws away the write.
+    function _takeExternalContentX() {
+        control._ownContentX = control.contentX
+        if (flickTicker.flingAxis === T.Flickable.HorizontalFlick)
+            control._cancelFling()
+        wheelAnimX.stop()
+        reboundX.stop()
+        fixupAnimX.stop()
+        // Explicitly, rather than relying on the animations' onStopped: on_OvershootXChanged
+        // would otherwise move the content back to the bound, undoing the write.
+        control.reboundingHorizontally = false
+        control._overshootX = 0
+        control._velocityX = 0
+        if (dragHandler.active)
+            control._rawContentX = control.contentX
+    }
+
+    function _takeExternalContentY() {
+        control._ownContentY = control.contentY
+        if (flickTicker.flingAxis === T.Flickable.VerticalFlick)
+            control._cancelFling()
+        wheelAnimY.stop()
+        reboundY.stop()
+        fixupAnimY.stop()
+        // Explicitly, rather than relying on the animations' onStopped: on_OvershootYChanged
+        // would otherwise move the content back to the bound, undoing the write.
+        control.reboundingVertically = false
+        control._overshootY = 0
+        control._velocityY = 0
+        if (dragHandler.active)
+            control._rawContentY = control.contentY
+    }
+
+    // Under FollowBoundsBehavior the content itself sits past the bound by the overshoot, so the
+    // rebound, which animates the overshoot, has to carry the content back with it. Without this
+    // the overshoot receded but the content stayed past the bound for good.
+    on_OvershootXChanged: {
+        if (control.reboundingHorizontally && control._followBounds)
+            control._setContentX(control._clamp(control.contentX, 0, control._maxContentX) + control._overshootX)
+    }
+
+    on_OvershootYChanged: {
+        if (control.reboundingVertically && control._followBounds)
+            control._setContentY(control._clamp(control.contentY, 0, control._maxContentY) + control._overshootY)
+    }
+
+    on_WheelXChanged: {
+        if (wheelAnimX.running)
+            control._setContentX(control._wheelX)
+    }
+
+    on_WheelYChanged: {
+        if (wheelAnimY.running)
+            control._setContentY(control._wheelY)
+    }
+
+    on_FixupXChanged: {
+        if (fixupAnimX.running)
+            control._setContentX(control._fixupX)
+    }
+
+    on_FixupYChanged: {
+        if (fixupAnimY.running)
+            control._setContentY(control._fixupY)
+    }
 
     onDraggingChanged: {
         if (dragging)
@@ -297,7 +443,15 @@ T.Item {
     }
 
     function _applyDrag(dx: real, dy: real) {
-        if (control.flickableDirection === T.Flickable.HorizontalAndVerticalFlick && control._dragAxis === "") {
+        // Travel along an axis with nothing to scroll is dropped, as dragHandler's xAxis/yAxis
+        // already do for a Flickable that scrolls only one way. Otherwise a two-way Flickable
+        // whose content fits one axis (typical with AutoFlickDirection) could lock the drag onto
+        // that axis and then move nothing.
+        if (!control._scrollableX)
+            dx = 0
+        if (!control._scrollableY)
+            dy = 0
+        if (control._scrollableX && control._scrollableY && control._dragAxis === "") {
             control._axisAccumX += dx
             control._axisAccumY += dy
             const ax = control._axisAccumX
@@ -339,7 +493,7 @@ T.Item {
             }
             const clampedX = control._clamp(dampedX, 0, maxX)
             const overX = dampedX - clampedX
-            control.contentX = control._followBounds ? dampedX : clampedX
+            control._setContentX(control._followBounds ? dampedX : clampedX)
             control._overshootX = control._dragOverBounds ? overX : 0
             control._updateOverscrollX(overX)
         }
@@ -356,7 +510,7 @@ T.Item {
             }
             const clampedY = control._clamp(dampedY, 0, maxY)
             const overY = dampedY - clampedY
-            control.contentY = control._followBounds ? dampedY : clampedY
+            control._setContentY(control._followBounds ? dampedY : clampedY)
             control._overshootY = control._dragOverBounds ? overY : 0
             control._updateOverscrollY(overY)
         }
@@ -453,9 +607,7 @@ T.Item {
         return 1000 * Math.exp(l / (control._flingDecelerationRate - 1))
     }
 
-    function _startFling(vx: real, vy: real) {
-        const allowX = control._canFlickX && control._dragAxis !== "y"
-        const allowY = control._canFlickY && control._dragAxis !== "x"
+    function _startFling(vx: real, vy: real, allowX: bool, allowY: bool) {
         if (allowX && allowY) {
             // Combined direction, released before the axis-lock threshold was ever crossed -
             // pick whichever axis had the dominant velocity rather than flinging both at once
@@ -510,6 +662,10 @@ T.Item {
         }
 
         flickTicker.flingAxis = axis
+        if (horizontal)
+            control._velocityX = -vel
+        else
+            control._velocityY = -vel
         flickTicker.flingStartValue = current
         flickTicker.flingTargetValue = target
         flickTicker.flingDurationMs = duration
@@ -534,6 +690,10 @@ T.Item {
     }
 
     function _cancelFling() {
+        if (flickTicker.flingAxis === T.Flickable.HorizontalFlick)
+            control._velocityX = 0
+        else if (flickTicker.flingAxis === T.Flickable.VerticalFlick)
+            control._velocityY = 0
         flickTicker.flingAxis = 0
         flickTicker.flingAbsorbGlow = null
     }
@@ -565,18 +725,65 @@ T.Item {
     function _cancelRebound() {
         reboundX.stop()
         reboundY.stop()
+        fixupAnimX.stop()
+        fixupAnimY.stop()
         control.reboundingHorizontally = false
         control.reboundingVertically = false
     }
 
     /*!
-      Stops any running fling or overscroll rebound. Call this before writing contentX/contentY
-      from outside, so the write isn't immediately overwritten by the fling ticker on the next
-      frame - stock's setContentX/setContentY call resetTimeline() for the same reason.
+      Stops any running fling or overscroll rebound. Writing contentX/contentY from outside already
+      stops them along that axis.
     */
     function cancelFlick() {
         control._cancelFling()
         control._cancelRebound()
+    }
+
+    /*!
+      Flicks the content with \a xVelocity and \a yVelocity, in px/s, as if a finger had released
+      at that speed - the same sign as a finger's movement, so a positive yVelocity moves the
+      content down, towards its beginning, as on QtQuick.Flickable. Like a touch fling, only one
+      axis flings at a time: given both, the faster one wins.
+    */
+    function flick(xVelocity: real, yVelocity: real) {
+        wheelAnimX.stop()
+        wheelAnimY.stop()
+        control._startFling(xVelocity, yVelocity, control._scrollableX, control._scrollableY)
+    }
+
+    /*!
+      Moves the content back inside its bounds, with the same animation as the rebound after a
+      drag past a bound. Call it after positioning the content from outside, or after shrinking
+      contentWidth/contentHeight, since neither is corrected on its own - as on QtQuick.Flickable.
+      Stops a running fling; leaves an axis that is already rebounding alone.
+    */
+    function returnToBounds() {
+        control._cancelFling()
+        if (!control.reboundingHorizontally) {
+            const x = control.contentX
+            const endX = control._clamp(x, 0, control._maxContentX)
+            if (endX !== x) {
+                wheelAnimX.stop()
+                control._fixupX = x
+                control._fixupMidX = (x + endX) / 2
+                control._fixupEndX = endX
+                control.reboundingHorizontally = true
+                fixupAnimX.restart()
+            }
+        }
+        if (!control.reboundingVertically) {
+            const y = control.contentY
+            const endY = control._clamp(y, 0, control._maxContentY)
+            if (endY !== y) {
+                wheelAnimY.stop()
+                control._fixupY = y
+                control._fixupMidY = (y + endY) / 2
+                control._fixupEndY = endY
+                control.reboundingVertically = true
+                fixupAnimY.restart()
+            }
+        }
     }
 
     function _wheelStep(dx: real, dy: real, animate: bool) {
@@ -593,23 +800,25 @@ T.Item {
         if (animate) {
             if (targetX !== control.contentX) {
                 wheelAnimX.stop()
+                control._wheelX = control.contentX
                 wheelAnimX.to = targetX
                 wheelAnimX.start()
             }
             if (targetY !== control.contentY) {
                 wheelAnimY.stop()
+                control._wheelY = control.contentY
                 wheelAnimY.to = targetY
                 wheelAnimY.start()
             }
         } else {
-            control.contentX = targetX
-            control.contentY = targetY
+            control._setContentX(targetX)
+            control._setContentY(targetY)
         }
     }
 
     T.Item {
 
-        id: contentItem
+        id: flickableContent
 
         x: -control.contentX
         y: -control.contentY
@@ -714,8 +923,10 @@ T.Item {
                 // value a previous gesture left behind: stock's pressPos is move.value(), which is
                 // post-damping. This is what makes grabbing mid-rebound continue from where the
                 // content visually is.
-                control._rawContentX = control.contentX + control._overshootX
-                control._rawContentY = control.contentY + control._overshootY
+                //
+                // Under FollowBoundsBehavior contentX/contentY already include the overshoot.
+                control._rawContentX = control._followBounds ? control.contentX : control.contentX + control._overshootX
+                control._rawContentY = control._followBounds ? control.contentY : control.contentY + control._overshootY
 
                 // DragHandler only activates once the pointer has passed dragThreshold. With
                 // synchronousDrag that travel is replayed right here, which both keeps the content
@@ -728,6 +939,8 @@ T.Item {
             } else {
                 const tr = dragHandler._tracker
                 tr.compute()
+                control._velocityX = 0
+                control._velocityY = 0
                 const overX = control._overshootX !== 0
                 const overY = control._overshootY !== 0
                 // Releasing from an overshoot rebounds instead of flinging. Letting _startFling run
@@ -739,7 +952,8 @@ T.Item {
                 if (overY)
                     control._startReboundY()
                 if (!overX && !overY)
-                    control._startFling(tr.vx, tr.vy)
+                    control._startFling(tr.vx, tr.vy, control._scrollableX && control._dragAxis !== "y",
+                                        control._scrollableY && control._dragAxis !== "x")
                 control._releaseOverscroll()
             }
         }
@@ -781,9 +995,14 @@ T.Item {
             const dy = ty - dragHandler._appliedY
             dragHandler._appliedX = tx
             dragHandler._appliedY = ty
-            dragHandler._tracker.record(tx, ty)
+            const tr = dragHandler._tracker
+            tr.record(tx, ty)
             if (dx !== 0 || dy !== 0)
                 control._applyDrag(dx, dy)
+            // Content moves opposite to the finger. Only the axis the drag moves reports it.
+            tr.compute()
+            control._velocityX = control.draggingHorizontally ? -tr.vx : 0
+            control._velocityY = control.draggingVertically ? -tr.vy : 0
         }
 
         onActiveTranslationChanged: dragHandler._applyTravel()
@@ -902,14 +1121,22 @@ T.Item {
         onTriggered: {
             const t = flickTicker.flingDurationMs > 0
                 ? Math.min(1, flickTicker.elapsedTime * 1000 / flickTicker.flingDurationMs) : 1
-            const progress = t >= 1 ? 1 : 1 - Math.pow(1 - t, flickTicker._progressExponent)
+            // (1-t)^n, reused for the velocity: progress'(t) = n * (1-t)^(n-1).
+            const n = flickTicker._progressExponent
+            const rest = t >= 1 ? 0 : Math.pow(1 - t, n)
+            const progress = 1 - rest
+            const velocity = rest > 0 ? (flickTicker.flingTargetValue - flickTicker.flingStartValue)
+                                        * n * rest / (1 - t) * 1000 / flickTicker.flingDurationMs : 0
             const value = flickTicker.flingStartValue
                 + progress * (flickTicker.flingTargetValue - flickTicker.flingStartValue)
 
-            if (flickTicker.flingAxis === T.Flickable.HorizontalFlick)
-                control.contentX = value
-            else if (flickTicker.flingAxis === T.Flickable.VerticalFlick)
-                control.contentY = value
+            if (flickTicker.flingAxis === T.Flickable.HorizontalFlick) {
+                control._setContentX(value)
+                control._velocityX = velocity
+            } else if (flickTicker.flingAxis === T.Flickable.VerticalFlick) {
+                control._setContentY(value)
+                control._velocityY = velocity
+            }
 
             if (t >= 1) {
                 const glow = flickTicker.flingAbsorbGlow
@@ -964,7 +1191,7 @@ T.Item {
     T.NumberAnimation {
         id: wheelAnimX
         target: control
-        property: "contentX"
+        property: "_wheelX"
         duration: 100
         easing.type: T.Easing.OutQuad
     }
@@ -972,8 +1199,47 @@ T.Item {
     T.NumberAnimation {
         id: wheelAnimY
         target: control
-        property: "contentY"
+        property: "_wheelY"
         duration: 100
         easing.type: T.Easing.OutQuad
+    }
+
+    // returnToBounds(): the same two-stage curve as the rebound, applied to the content position.
+    T.SequentialAnimation {
+        id: fixupAnimX
+        T.NumberAnimation {
+            target: control
+            property: "_fixupX"
+            to: control._fixupMidX
+            duration: 100
+            easing.type: T.Easing.InQuad
+        }
+        T.NumberAnimation {
+            target: control
+            property: "_fixupX"
+            to: control._fixupEndX
+            duration: 300
+            easing.type: T.Easing.OutExpo
+        }
+        onStopped: control.reboundingHorizontally = false
+    }
+
+    T.SequentialAnimation {
+        id: fixupAnimY
+        T.NumberAnimation {
+            target: control
+            property: "_fixupY"
+            to: control._fixupMidY
+            duration: 100
+            easing.type: T.Easing.InQuad
+        }
+        T.NumberAnimation {
+            target: control
+            property: "_fixupY"
+            to: control._fixupEndY
+            duration: 300
+            easing.type: T.Easing.OutExpo
+        }
+        onStopped: control.reboundingVertically = false
     }
 }

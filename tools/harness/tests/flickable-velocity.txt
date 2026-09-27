@@ -1,0 +1,23 @@
+# horizontalVelocity/verticalVelocity: positive while contentY grows, following the finger during
+# a drag, the fling's decaying speed during a fling, and 0 at rest.
+load ../scenes/FlickableScene.qml
+
+expect flick.verticalVelocity === 0
+drag 200 700 200 400 250
+expect flick.dragging && flick.verticalVelocity > 500 && flick.horizontalVelocity === 0
+move 200 350
+wait 16
+up 200 350
+expect flick.flicking && flick.verticalVelocity > 500
+eval H.set("v0", flick.verticalVelocity)
+wait 300
+eval flick.verticalVelocity
+expect flick.flicking && flick.verticalVelocity > 0 && flick.verticalVelocity < H.get("v0")
+wait 4000
+expect !flick.moving && flick.verticalVelocity === 0
+
+# Holding still before lifting: no fling and no velocity left behind.
+drag 200 700 200 500 200
+wait 150
+up 200 500
+expect !flick.flicking && flick.verticalVelocity === 0

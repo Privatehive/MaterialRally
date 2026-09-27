@@ -1,0 +1,31 @@
+# Flickable.AutoFlickDirection flicks along each axis whose content size differs from the
+# Flickable's. Its value is 0, so it used to disable scrolling altogether.
+load ../scenes/FlickableScene.qml
+
+eval flick.flickableDirection = Flickable.AutoFlickDirection
+swipe 200 700 200 400 400
+wait 100
+expect flick.contentY > 250 && flick.contentX === 0
+
+# Content that fits horizontally: a diagonal drag scrolls only vertically, by its full vertical
+# travel, rather than locking onto the axis with nothing to scroll.
+eval flick.contentY = 0; flick.contentWidth = 300
+drag 100 700 200 400 400
+wait 16
+expect flick.contentX === 0 && flick.horizontalOvershoot === 0
+eval flick.contentY
+expect flick.contentY === 300
+up 200 400
+wait 3000
+
+# Wider content scrolls horizontally too.
+eval flick.contentY = 0; flick.contentWidth = 1000
+swipe 350 400 50 400 400
+wait 100
+expect flick.contentX > 250 && flick.contentY === 0
+
+# AutoFlickIfNeeded: only an axis whose content is larger.
+eval flick.contentX = 0; flick.flickableDirection = Flickable.AutoFlickIfNeeded; flick.contentWidth = 300
+swipe 200 700 200 400 400
+wait 100
+expect flick.contentY > 250 && flick.contentX === 0
