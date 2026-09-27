@@ -1,0 +1,19 @@
+# On release the edge glow recedes like Android's EdgeEffect: from where it was, over 600 ms,
+# decelerating (value = start * (1 - t)^2) - rather than vanishing in a single frame.
+load ../scenes/FlickableScene.qml
+eval flick.contentY = flick.contentHeight - flick.height
+
+drag 200 600 200 400 300
+wait 100
+eval H.set("start", H.find("bottomGlow", flick).pull)
+expect H.get("start") > 0.5
+up
+
+wait 100
+eval H.find("bottomGlow", flick).pull / H.get("start")
+expect H.find("bottomGlow", flick).pull / H.get("start") > 0.45 && H.find("bottomGlow", flick).pull / H.get("start") < 0.85
+wait 200
+eval H.find("bottomGlow", flick).pull / H.get("start")
+expect H.find("bottomGlow", flick).pull / H.get("start") > 0.1 && H.find("bottomGlow", flick).pull / H.get("start") < 0.4
+wait 400
+expect H.find("bottomGlow", flick).pull === 0

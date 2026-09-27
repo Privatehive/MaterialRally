@@ -366,17 +366,20 @@ T.Item {
         if (!control.overscrollGlow)
             return
         const extent = Math.max(1, control.width)
-        // The overPx === 0 case has to clear both: dragging back inside the bounds while still
-        // holding otherwise left the glow lit at whatever value it last reached, until release.
+        // Pulling one edge releases the opposite one, as Android's ScrollView does. The
+        // overPx === 0 case releases both: dragging back inside the bounds while still holding
+        // otherwise left the glow lit at whatever value it last reached, until the finger lifted.
+        // release() only acts on a glow that is being pulled, so this leaves a glow that is still
+        // receding from an earlier gesture (or absorbing a fling) alone.
         if (overPx > 0) {
-            leftGlow.pull = 0
-            rightGlow.pull = Math.min(1, Math.sqrt(overPx / (extent * 0.5)))
+            leftGlow.release()
+            rightGlow.setPull(Math.min(1, Math.sqrt(overPx / (extent * 0.5))))
         } else if (overPx < 0) {
-            rightGlow.pull = 0
-            leftGlow.pull = Math.min(1, Math.sqrt(-overPx / (extent * 0.5)))
+            rightGlow.release()
+            leftGlow.setPull(Math.min(1, Math.sqrt(-overPx / (extent * 0.5))))
         } else {
-            leftGlow.pull = 0
-            rightGlow.pull = 0
+            leftGlow.release()
+            rightGlow.release()
         }
     }
 
@@ -386,22 +389,22 @@ T.Item {
         const extent = Math.max(1, control.height)
         // See _updateOverscrollX for why the zero case is handled explicitly.
         if (overPx > 0) {
-            topGlow.pull = 0
-            bottomGlow.pull = Math.min(1, Math.sqrt(overPx / (extent * 0.5)))
+            topGlow.release()
+            bottomGlow.setPull(Math.min(1, Math.sqrt(overPx / (extent * 0.5))))
         } else if (overPx < 0) {
-            bottomGlow.pull = 0
-            topGlow.pull = Math.min(1, Math.sqrt(-overPx / (extent * 0.5)))
+            bottomGlow.release()
+            topGlow.setPull(Math.min(1, Math.sqrt(-overPx / (extent * 0.5))))
         } else {
-            topGlow.pull = 0
-            bottomGlow.pull = 0
+            topGlow.release()
+            bottomGlow.release()
         }
     }
 
     function _releaseOverscroll() {
-        topGlow.pull = 0
-        bottomGlow.pull = 0
-        leftGlow.pull = 0
-        rightGlow.pull = 0
+        topGlow.release()
+        bottomGlow.release()
+        leftGlow.release()
+        rightGlow.release()
     }
 
     function _startFling(vx: real, vy: real) {
@@ -569,10 +572,6 @@ T.Item {
     // and _releaseOverscroll out of qmlcachegen's AOT compilation (verified via
     // QT_QML_GENERATE_AOT_STATS). Those run on every touch move, so keeping them compiled is worth
     // far more than two idle items. An idle EdgeGlow is `visible: false`, so it holds no layer FBO.
-    //
-    // `tracking` suppresses EdgeGlow's smoothing Behavior while the finger is down, so the glow
-    // follows the drag 1:1 instead of chasing it through a 300 ms animation restarted on every
-    // touch sample.
 
     RallyPrivate.EdgeGlow {
         id: topGlow
@@ -581,7 +580,6 @@ T.Item {
         anchors.right: control.right
         anchors.top: control.top
         height: 64
-        tracking: control.dragging
     }
 
     RallyPrivate.EdgeGlow {
@@ -591,7 +589,6 @@ T.Item {
         anchors.right: control.right
         anchors.bottom: control.bottom
         height: 64
-        tracking: control.dragging
     }
 
     RallyPrivate.EdgeGlow {
@@ -601,7 +598,6 @@ T.Item {
         anchors.bottom: control.bottom
         anchors.left: control.left
         width: 64
-        tracking: control.dragging
     }
 
     RallyPrivate.EdgeGlow {
@@ -611,7 +607,6 @@ T.Item {
         anchors.bottom: control.bottom
         anchors.right: control.right
         width: 64
-        tracking: control.dragging
     }
 
     T.DragHandler {

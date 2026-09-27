@@ -7,17 +7,11 @@ Item {
     id: control
 
     property int edge: Qt.TopEdge
+    // Driven through setPull()/release()/absorb() rather than written directly: each of those
+    // stops whatever animation the others started, so e.g. a drag that begins while the glow is
+    // still receding takes over from where it is instead of being overwritten by the animation.
     property real pull: 0
     property color glowColor: Material.accent
-
-    /*!
-      Set while the owning Flickable is actively being dragged. The smoothing Behavior below is a
-      release/settle animation; leaving it enabled during the drag meant every touch sample
-      restarted a fresh 300 ms animation - hundreds of QAbstractAnimation restarts per second on a
-      high-rate digitiser - and made the glow visibly chase the finger rather than track it.
-      Android's EdgeEffect follows the pull 1:1 and only animates on release and absorb.
-    */
-    property bool tracking: false
 
     readonly property bool horizontalEdge: edge === Qt.LeftEdge || edge === Qt.RightEdge
     readonly property real thickness: horizontalEdge ? control.width : control.height
@@ -30,18 +24,31 @@ Item {
     visible: p > 0.001
     clip: true
 
+    // Follows the finger 1:1, like Android's EdgeEffect.onPull() - no smoothing while dragging.
+    function setPull(value: real) {
+        absorbAnim.stop()
+        recedeAnim.stop()
+        control.pull = value
+    }
+
+    // Android's EdgeEffect.onRelease(): recede from wherever the glow is. Like there, it only
+    // acts on a glow that is being pulled - one already receding or absorbing is left alone - so
+    // it is safe to call on every touch move.
+    function release() {
+        if (control.pull <= 0 || recedeAnim.running || absorbAnim.running)
+            return
+        recedeAnim.restart()
+    }
+
     function absorb(fraction: real) {
+        recedeAnim.stop()
         absorbAnim.peak = Math.max(0.15, Math.min(1, fraction))
         absorbAnim.restart()
     }
 
-    Behavior on pull {
-        enabled: !absorbAnim.running && !control.tracking
-        NumberAnimation {
-            duration: 300
-            easing.type: Easing.OutQuad
-        }
-    }
+    // Android's EdgeEffect RECEDE state, which follows both a release and an absorb: 600 ms
+    // (RECEDE_TIME) with a DecelerateInterpolator, i.e. 1 - (1 - t)^2 - Easing.OutQuad.
+    readonly property int _recedeDuration: 600
 
     // `edge` never changes after construction, so the four-way switch that used to run inside
     // dome.x and dome.y on every animating frame is hoisted into these two, which depend on the
@@ -95,8 +102,17 @@ Item {
             target: control
             property: "pull"
             to: 0
-            duration: 380
-            easing.type: Easing.InQuad
+            duration: control._recedeDuration
+            easing.type: Easing.OutQuad
         }
+    }
+
+    NumberAnimation {
+        id: recedeAnim
+        target: control
+        property: "pull"
+        to: 0
+        duration: control._recedeDuration
+        easing.type: Easing.OutQuad
     }
 }
