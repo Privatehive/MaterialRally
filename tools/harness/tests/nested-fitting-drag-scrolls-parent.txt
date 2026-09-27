@@ -1,0 +1,11 @@
+# A nested Flickable whose content fits has nothing to scroll, so a drag on it goes to the
+# Flickable around it - as if it were plain content.
+load ../scenes/NestedFittingScene.qml
+expect inner.contentHeight === inner.height
+
+drag 200 450 200 250 400
+wait 30
+eval [inner.dragging, inner.contentY, outer.dragging, outer.contentY]
+expect !inner.dragging && inner.contentY === 0
+expect outer.dragging && Math.abs(outer.contentY - 200) < 1
+up

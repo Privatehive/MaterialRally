@@ -627,8 +627,15 @@ T.Item {
         // holds a passive grab, so this has no say in which handler wins the gesture.
         grabPermissions: T.PointerHandler.CanTakeOverFromItems | T.PointerHandler.CanTakeOverFromHandlersOfDifferentType
                          | T.PointerHandler.ApprovesTakeOverByItems | T.PointerHandler.ApprovesCancellation
-        xAxis.enabled: control._canFlickX
-        yAxis.enabled: control._canFlickY
+        // Only claim a drag along an axis that has something to scroll. Otherwise a nested
+        // Flickable whose content fits swallowed the drag and nothing moved; now the drag is left
+        // to the Flickable around it, as if this one were plain content. Matches Android, where a
+        // ScrollView that cannot scroll never intercepts a drag (and a NestedScrollView passes the
+        // whole, unconsumed scroll on to its parent). QQuickDragHandler also refuses to activate
+        // for a drag that is mostly along a disabled axis, so this decides the axis, not just the
+        // movement.
+        xAxis.enabled: control._canFlickX && control._maxContentX > 0
+        yAxis.enabled: control._canFlickY && control._maxContentY > 0
 
         // Allocated once. Recording a sample allocates nothing, which matters because it happens
         // on every touch move. Shared with Rally.SwipeView - see FlingPhysics.VelocityTracker
