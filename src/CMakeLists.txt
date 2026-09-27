@@ -37,6 +37,8 @@ qt_add_qml_module(MaterialRally
         units.cpp
         velocitytracker.h
         velocitytracker.cpp
+        swipeviewbase.h
+        swipeviewbase.cpp
 
         QML_FILES
         MaterialRally/ListView.qml

@@ -1,0 +1,37 @@
+# The attached SwipeView properties, as on QtQuick.Controls' SwipeView: index, isCurrentItem,
+# isNextItem, isPreviousItem and view, on each page - declared inline or from a Repeater.
+load ../scenes/SwipeAttachedScene.qml
+
+eval H.set("p2", H.find("page2")); H.set("p3", H.find("page3"))
+expect view.count === 4
+expect page0.attachedIndex === 0 && page1.attachedIndex === 1 && H.get("p2").attachedIndex === 2 && H.get("p3").attachedIndex === 3
+expect page0.attachedView === view
+expect page0.current && !page0.next && !page0.previous
+expect page1.next && !page1.current && !page1.previous
+expect !H.get("p2").current && !H.get("p2").next && !H.get("p2").previous
+
+eval view.currentIndex = 2
+expect H.get("p2").current && H.get("p3").next && page1.previous
+expect !page0.current && !page0.next && !page0.previous && !page1.current
+
+# Swiping updates them too.
+wait 500
+swipe 300 400 50 400 150
+wait 500
+expect view.currentIndex === 3 && H.get("p3").current && H.get("p2").previous && !H.get("p2").current
+
+# An item inside a page is not a page: no attached state, as with stock.
+expect inner.attachedIndex === -1 && inner.attachedView === null
+
+# Pages added at runtime get their state. (Changing an integer model recreates all of the
+# Repeater's delegates, so the Repeater pages are looked up again.)
+eval repeater.model = 3
+wait 100
+eval H.set("p2", H.find("page2")); H.set("p3", H.find("page3")); H.set("p4", H.find("page4"))
+expect view.count === 5 && H.get("p4").attachedIndex === 4 && H.get("p4").next && H.get("p3").current
+
+# Removing page 1 shifts the later pages down.
+eval page1.parent = null
+wait 100
+expect view.count === 4 && page1.attachedIndex === -1 && !page1.current && !page1.next && !page1.previous
+expect H.get("p2").attachedIndex === 1 && H.get("p3").attachedIndex === 2 && H.get("p4").attachedIndex === 3

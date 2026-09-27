@@ -21,9 +21,12 @@ import MaterialRally as Rally
     Pages are automatically sized to fill the SwipeView (width/height bound to it), matching
     stock SwipeView's behavior.
 
-    Unlike QtQuick.Controls.SwipeView, there is no attached SwipeView.isCurrentItem/isNextItem/
-    isPreviousItem - compare a delegate's own index against currentIndex directly instead, e.g.
-    a lazy Loader's \c{active: Math.abs(index - view.currentIndex) <= 1}.
+    Like QtQuick.Controls.SwipeView, each page has the attached properties SwipeView.index,
+    SwipeView.isCurrentItem, SwipeView.isNextItem, SwipeView.isPreviousItem and SwipeView.view,
+    e.g. a lazy Loader's \c{active: Rally.SwipeView.isCurrentItem || Rally.SwipeView.isNextItem
+    || Rally.SwipeView.isPreviousItem}. They are set on the pages themselves only (see
+    SwipeViewAttached in swipeviewbase.h), and follow currentIndex, which changes mid-swipe as
+    soon as the next page is more than half in view - as stock's does.
 
     Like Rally.Flickable, dragging to change pages is a touch (and stylus) gesture only - mouse/
     touchpad users are expected to navigate via whatever UI drives currentIndex (e.g. tab
@@ -40,7 +43,8 @@ import MaterialRally as Rally
     (handlePointerEventImpl: "If vertical dragging is disallowed, but the user is dragging mostly
     vertically, then don't activate"), which is the axis arbitration this nesting needs.
 */
-T.Item {
+// SwipeViewBase is a plain Item that only adds the attached properties - see swipeviewbase.h.
+Rally.SwipeViewBase {
 
     id: control
 
@@ -187,6 +191,7 @@ T.Item {
     // _rowX's own binding (-currentIndex * _pageStep) live and in control until a real,
     // post-construction settle is actually needed.
     onCurrentIndexChanged: {
+        control._setCurrentIndex(control.currentIndex)
         if (!control._dragging && control._pageStep > 0)
             control._settleTo(control.currentIndex)
     }
@@ -242,6 +247,7 @@ T.Item {
             page.y = 0
         }
         control._pageList = pages
+        control._setPages(pages, control.currentIndex)
     }
 
     function _clamp(value: real, min: real, max: real): real {

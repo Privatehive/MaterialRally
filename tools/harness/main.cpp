@@ -55,6 +55,7 @@
 #include <QIcon>
 #include <QJSValue>
 #include <QJsonDocument>
+#include <QPointer>
 #include <QPointingDevice>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
@@ -97,8 +98,21 @@ public:
 		return nullptr;
 	}
 
-	Q_INVOKABLE void set(const QString &key, const QVariant &value) { store.insert(key, value); }
-	Q_INVOKABLE QVariant get(const QString &key) const { return store.value(key); }
+	// Objects are held through a QPointer: a scene can destroy a stored item (e.g. a Repeater
+	// recreating its delegates), and get() then returns null instead of a dangling pointer.
+	Q_INVOKABLE void set(const QString &key, const QVariant &value) {
+		if (auto *obj = value.value<QObject *>()) {
+			objects.insert(key, obj);
+			store.remove(key);
+		} else {
+			store.insert(key, value);
+			objects.remove(key);
+		}
+	}
+	Q_INVOKABLE QVariant get(const QString &key) const {
+		if (objects.contains(key)) return QVariant::fromValue(objects.value(key).data());
+		return store.value(key);
+	}
 
 	Q_INVOKABLE QRectF rect(QQuickItem *item) const {
 		return item ? item->mapRectToScene(QRectF(0, 0, item->width(), item->height())) : QRectF();
@@ -106,6 +120,7 @@ public:
 
 private:
 	QVariantMap store;
+	QHash<QString, QPointer<QObject>> objects;
 
 	static bool matches(QObject *obj, const QString &name) {
 		if (obj->objectName() == name) return true;
