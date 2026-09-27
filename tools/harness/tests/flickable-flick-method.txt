@@ -1,0 +1,18 @@
+# flick(xVelocity, yVelocity) starts a fling from code, with stock's sign: a negative yVelocity
+# (as for a finger moving up) scrolls towards the end.
+load ../scenes/FlickableScene.qml
+
+eval flick.flick(0, -3000)
+expect flick.flicking && flick.flickingVertically && flick.verticalVelocity > 0
+wait 4000
+eval flick.contentY
+expect !flick.moving && flick.contentY > 500 && flick.verticalVelocity === 0
+
+# Towards a bound the content is already at: nothing to fling.
+eval flick.contentY = 0
+eval flick.flick(0, 3000)
+expect !flick.flicking && flick.contentY === 0
+
+# A horizontal velocity on a vertical-only Flickable does nothing.
+eval flick.flick(-3000, 0)
+expect !flick.flicking && flick.contentX === 0

@@ -1,0 +1,12 @@
+# A short slow drag snaps back; the same distance flicked fast commits to the next page.
+load ../scenes/SwipeInScrollScene.qml
+
+drag 300 400 240 400 600
+wait 200
+up
+wait 600
+expect view.currentIndex === 0
+
+swipe 300 400 240 400 50
+wait 600
+expect view.currentIndex === 1

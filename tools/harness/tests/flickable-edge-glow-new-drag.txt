@@ -1,0 +1,20 @@
+# A new drag that does not reach an edge leaves a glow that is still receding from the previous
+# gesture to finish receding, instead of cutting it off.
+load ../scenes/FlickableScene.qml
+eval flick.contentY = flick.contentHeight - flick.height
+
+drag 200 600 200 400 300
+wait 50
+up
+wait 100
+eval H.set("receding", H.find("bottomGlow", flick).pull)
+expect H.get("receding") > 0
+
+# Drag the other way, away from the edge
+drag 200 300 200 400 100
+wait 20
+eval H.find("bottomGlow", flick).pull
+expect H.find("bottomGlow", flick).pull > 0
+up
+wait 700
+expect H.find("bottomGlow", flick).pull === 0

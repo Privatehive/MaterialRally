@@ -1,0 +1,15 @@
+# StopAtBounds (the default): the content never leaves [0, contentHeight - height].
+load ../scenes/FlickableScene.qml
+
+swipe 200 300 200 700 150
+wait 500
+expect flick.contentY === 0 && flick.verticalOvershoot === 0
+
+swipe 200 750 200 50 60
+wait 150
+swipe 200 750 200 50 60
+wait 150
+swipe 200 750 200 50 60
+wait 4000
+eval flick.contentY
+expect flick.contentY <= 3200 && flick.atYEnd

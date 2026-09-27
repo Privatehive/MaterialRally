@@ -1,0 +1,21 @@
+# Once a drag has gone to one Flickable it stays there: turning a vertical drag sideways does not
+# hand it to the carousel, and turning a horizontal one does not hand it to the feed.
+load ../scenes/NestedHorizontalInVerticalScene.qml
+
+drag 200 480 200 380 300
+move 20 380
+wait 50
+move 20 380
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect Math.abs(outer.contentY - 100) < 1 && carousel.contentX === 0
+up
+wait 100
+eval outer.contentY = 0
+
+drag 350 400 250 400 300
+move 250 700
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect Math.abs(carousel.contentX - 100) < 1 && outer.contentY === 0
+up

@@ -1,0 +1,26 @@
+# A second finger lands before the first has started a drag, the first lifts, and the second drags
+# on. The Flickable picks the second finger up late, never having seen it pressed - Qt then leaves
+# its centroid.scenePressPosition at (0,0), and measuring travel from that made the content jump
+# by the finger's whole scene position. It must continue smoothly from where the finger is.
+load ../scenes/FlickableScene.qml
+eval flick.contentY = 1000
+
+down 200 600 0
+wait 30
+down 100 300 1
+wait 30
+up 0
+wait 30
+
+move 100 296 1
+wait 30
+move 100 290 1
+wait 30
+eval [flick.dragging, flick.contentY]
+expect flick.contentY >= 1000 && flick.contentY <= 1010
+
+move 100 190 1
+wait 30
+eval flick.contentY
+expect flick.contentY >= 1100 && flick.contentY <= 1110
+up 1

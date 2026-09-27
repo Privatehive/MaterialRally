@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QGuiApplication>
 #include <QIcon>
+#include <QQuickWindow>
 #include <QStyleHints>
 
 /*!
@@ -10,6 +11,8 @@
     \subtitle An example app showing all available Material Rally styled controls
 */
 int main(int argc, char **argv) {
+
+	qputenv("QSG_INFO", "1");
 
 	QtApplicationBase<QGuiApplication> app(argc, argv);
 	AdvancedQmlApplicationEngine qmlEngine;
@@ -20,7 +23,7 @@ int main(int argc, char **argv) {
 	if(QFile::exists(qmlMainFile)) {
 		qInfo() << "QML hot reloading enabled";
 		qmlEngine.setHotReload(true);
-		qmlEngine.loadRootItem(qmlMainFile, true);
+		qmlEngine.loadRootItem(qmlMainFile, false);
 	} else {
 		qmlEngine.setHotReload(false);
 		qmlEngine.loadRootItem("qrc:/qt/qml/Gallery/Gallery/main.qml", false);

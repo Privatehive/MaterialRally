@@ -1,0 +1,15 @@
+# Laying a finger on a running fling stops it on the spot.
+load ../scenes/FlickableScene.qml
+
+swipe 200 700 200 300 120
+wait 150
+expect flick.flicking
+down 200 400
+wait 20
+expect !flick.flicking
+eval H.set("caught", flick.contentY)
+wait 500
+expect flick.contentY === H.get("caught")
+up
+wait 200
+expect flick.contentY === H.get("caught")

@@ -1,0 +1,21 @@
+# returnToBounds() animates content that was placed outside its bounds back inside.
+load ../scenes/FlickableScene.qml
+
+eval flick.contentY = -300
+wait 100
+expect flick.contentY === -300
+eval flick.returnToBounds()
+expect flick.moving && flick.rebounding
+wait 600
+expect flick.contentY === 0 && !flick.moving
+
+# After shrinking the content, the end bound moves in.
+eval flick.contentY = 3200
+eval flick.contentHeight = 1000
+eval flick.returnToBounds()
+wait 600
+expect flick.contentY === 200 && !flick.moving
+
+# Inside the bounds: nothing to do.
+eval flick.returnToBounds()
+expect !flick.moving && flick.contentY === 200

@@ -1,0 +1,12 @@
+# Under FollowBoundsBehavior the content itself moves past the bound while dragging, and the
+# rebound after release carries it back - it used to stay past the bound for good.
+load ../scenes/FlickableScene.qml
+
+eval flick.boundsBehavior = Flickable.DragOverBounds; flick.boundsMovement = Flickable.FollowBoundsBehavior
+drag 200 300 200 600 300
+wait 200
+expect flick.contentY < -100 && flick.verticalOvershoot === flick.contentY
+up 200 600
+expect flick.rebounding
+wait 600
+expect flick.contentY === 0 && flick.verticalOvershoot === 0 && !flick.moving

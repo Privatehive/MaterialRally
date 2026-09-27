@@ -1,0 +1,18 @@
+# Full horizontal swipes page through the view and stop at the last page.
+load ../scenes/SwipeInScrollScene.qml
+
+swipe 350 400 50 400 200
+wait 500
+expect view.currentIndex === 1
+
+swipe 350 400 50 400 200
+wait 500
+expect view.currentIndex === 2
+
+swipe 350 400 50 400 200
+wait 500
+expect view.currentIndex === 2
+
+swipe 50 400 350 400 200
+wait 500
+expect view.currentIndex === 1

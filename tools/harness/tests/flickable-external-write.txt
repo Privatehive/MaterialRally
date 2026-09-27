@@ -1,0 +1,26 @@
+# Writing contentY from outside wins over whatever is moving the content, as in stock.
+load ../scenes/FlickableScene.qml
+
+# Mid-fling: the fling stops and the written value stays.
+swipe 200 700 200 300 120
+expect flick.flicking
+eval flick.contentY = 500
+expect !flick.flicking && flick.verticalVelocity === 0
+wait 300
+expect flick.contentY === 500
+
+# Mid-wheel-animation.
+wheel 200 400 -120
+eval flick.contentY = 1000
+wait 300
+expect flick.contentY === 1000
+
+# Mid-drag: the drag carries on from the written position rather than snapping back.
+drag 200 700 200 600 100
+wait 16
+eval flick.contentY = 2000
+move 200 550
+wait 16
+eval flick.contentY
+expect flick.contentY === 2050
+up 200 550

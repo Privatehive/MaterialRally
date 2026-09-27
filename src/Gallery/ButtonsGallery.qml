@@ -11,9 +11,28 @@ Pane {
 
         width: parent.width
 
-        Rally.Button {
-            text: "A rally button"
-            icon.source: "qrc:/icons/material_private/48x48/eye.svg"
+        Label {
+            text: qsTr("Rally Button")
+        }
+
+        DocItem {
+
+            id: rallyButton
+
+            Layout.fillWidth: true
+
+            text: 'import MaterialRally as Rally
+
+Rally.Button {
+text: "A rally button"
+icon.source: "qrc:/icons/material_private/48x48/eye.svg"
+}'
+        }
+
+        Rally.Divider {
+
+            Layout.fillWidth: true
+            color: "black"
         }
 
         Button {

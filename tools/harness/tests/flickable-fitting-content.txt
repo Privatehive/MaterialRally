@@ -1,0 +1,15 @@
+# A Flickable whose content fits does not start a drag at all (no drag, no movement), in either
+# direction it is allowed to flick.
+load ../scenes/FlickableScene.qml
+eval flick.flickableDirection = Flickable.HorizontalAndVerticalFlick; flick.contentHeight = flick.height
+
+drag 200 600 200 300 300
+wait 30
+expect !flick.dragging && flick.contentY === 0 && flick.contentX === 0
+up
+wait 100
+
+drag 350 400 50 400 300
+wait 30
+expect !flick.dragging && flick.contentY === 0 && flick.contentX === 0
+up

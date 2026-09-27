@@ -1,0 +1,21 @@
+# A finger stops a running carousel fling; a vertical drag from there scrolls the feed and leaves
+# the carousel where it was caught.
+load ../scenes/NestedHorizontalInVerticalScene.qml
+
+swipe 350 400 150 400 60
+wait 100
+expect carousel.flicking
+down 200 400
+wait 20
+expect !carousel.flicking
+eval H.set("caught", carousel.contentX)
+
+move 200 350
+wait 20
+move 200 250
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect outer.contentY > 100 && carousel.contentX === H.get("caught")
+up
+wait 300
+expect carousel.contentX === H.get("caught")

@@ -1,0 +1,13 @@
+# While dragging, content follows the finger exactly: no lag from the touch slop, and no lead
+# from replaying it twice.
+load ../scenes/FlickableScene.qml
+
+drag 200 600 200 350 500
+wait 50
+eval flick.contentY
+expect Math.abs(flick.contentY - 250) < 1
+
+move 200 250
+wait 50
+expect Math.abs(flick.contentY - 350) < 1
+up

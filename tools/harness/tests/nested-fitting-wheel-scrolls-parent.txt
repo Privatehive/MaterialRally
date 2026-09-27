@@ -1,0 +1,7 @@
+# A mouse wheel over a nested Flickable that has nothing to scroll scrolls the Flickable around it.
+load ../scenes/NestedFittingScene.qml
+
+wheel 200 400 -120
+wait 400
+eval [inner.contentY, outer.contentY]
+expect inner.contentY === 0 && outer.contentY > 0

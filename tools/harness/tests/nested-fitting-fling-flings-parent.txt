@@ -1,0 +1,8 @@
+# A fast swipe on a nested Flickable that has nothing to scroll flings the Flickable around it.
+load ../scenes/NestedFittingScene.qml
+
+swipe 200 480 200 330 80
+expect outer.flicking && !inner.flicking
+wait 3000
+eval [inner.contentY, outer.contentY]
+expect inner.contentY === 0 && outer.contentY > 300

@@ -1,0 +1,22 @@
+# A finger landing on the carousel stops a running feed fling (the carousel itself stays put), and
+# the feed can then be dragged on from the carousel.
+load ../scenes/NestedHorizontalInVerticalScene.qml
+
+# A gentle fling (~250px in total), so the carousel is still on screen when the finger lands
+swipe 200 750 200 700 80
+wait 60
+expect outer.flicking
+expect H.rect(carousel).y > 0
+down 200 {H.rect(carousel).y + 100}
+wait 20
+expect !outer.flicking
+eval H.set("caught", outer.contentY)
+wait 300
+expect outer.contentY === H.get("caught") && carousel.contentX === 0
+
+move 200 {H.rect(carousel).y + 30}
+wait 20
+move 200 {H.rect(carousel).y - 20}
+wait 20
+expect outer.contentY > H.get("caught") && carousel.contentX === 0
+up

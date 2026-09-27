@@ -1,0 +1,24 @@
+# The same late pick-up as flickable-second-finger-handover, for Rally.SwipeView: a 100px drag to
+# the left must move the pages by at most that much, not by the finger's scene x.
+load ../scenes/SwipeInScrollScene.qml
+eval view.currentIndex = 1
+wait 500
+
+down 300 600 0
+wait 30
+down 300 300 1
+wait 30
+up 0
+wait 30
+
+move 290 300 1
+wait 30
+move 280 300 1
+wait 30
+move 200 300 1
+wait 30
+eval view._rowX
+expect view._rowX <= -400 && view._rowX >= -500
+up 1
+wait 600
+expect view.currentIndex === 1

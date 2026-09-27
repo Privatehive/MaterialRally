@@ -1,0 +1,10 @@
+# Once the nested Flickable's content grows past its height it scrolls itself again, and the
+# Flickable around it stays put.
+load ../scenes/NestedFittingScene.qml
+eval inner.contentHeight = 600
+
+drag 200 480 200 380 400
+wait 30
+eval [inner.dragging, inner.contentY, outer.contentY]
+expect inner.dragging && Math.abs(inner.contentY - 100) < 1 && outer.contentY === 0
+up

@@ -1,0 +1,10 @@
+# A vertical drag that starts on the horizontal carousel scrolls the vertical feed around it; the
+# carousel does not move.
+load ../scenes/NestedHorizontalInVerticalScene.qml
+
+drag 200 450 200 200 400
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect Math.abs(outer.contentY - 250) < 1
+expect carousel.contentX === 0 && !carousel.dragging
+up

@@ -1,0 +1,19 @@
+# A diagonal drag goes to whichever Flickable scrolls along its dominant direction, and only that
+# Flickable moves.
+load ../scenes/NestedHorizontalInVerticalScene.qml
+
+# Mostly vertical with a horizontal component: the feed
+drag 200 450 280 200 400
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect Math.abs(outer.contentY - 250) < 1 && carousel.contentX === 0
+up
+wait 100
+eval outer.contentY = 0
+
+# Mostly horizontal with a vertical component: the carousel
+drag 350 400 100 460 400
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect Math.abs(carousel.contentX - 250) < 1 && outer.contentY === 0
+up

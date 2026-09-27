@@ -1,0 +1,12 @@
+# A drag starts only once the finger has moved past the 8dp touch slop.
+load ../scenes/FlickableScene.qml
+
+down 200 400
+move 200 393
+wait 50
+expect !flick.dragging && flick.contentY === 0
+
+move 200 391
+wait 50
+expect flick.dragging
+up

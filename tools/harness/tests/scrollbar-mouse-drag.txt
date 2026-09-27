@@ -1,0 +1,17 @@
+# With a mouse the ScrollBar is a normal, draggable scroll bar.
+load ../scenes/ScrollViewScene.qml
+
+eval H.set("flick", H.find("flickable", scroll)); H.set("bar", H.find("scrollBar", scroll))
+mmove 396 20
+wait 50
+expect Rally.RootItem.isMouseInput && H.get("bar").interactive
+mdown 396 20
+mmove 396 120
+mmove 396 220
+wait 50
+expect H.get("bar").pressed
+eval H.get("flick").contentY
+expect Math.abs(H.get("flick").contentY - 1000) < 10
+mup 396 220
+wait 50
+expect !H.get("bar").pressed

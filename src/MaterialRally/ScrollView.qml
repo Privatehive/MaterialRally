@@ -68,47 +68,129 @@ T.Control {
         property bool preparing: flickable.draggingVertically && flickable.atYBeginning
     }
 
-    contentItem: T.Flickable {
+    // A wrapper Item, not the Flickable directly, so the ScrollBar can be a *sibling* of the
+    // Flickable. It cannot be a child of either the ScrollView (whose default property is
+    // otherChildren, i.e. the scrolling Column) or of Rally.Flickable (whose default property is
+    // flickableChildren, i.e. the scrolling content) without scrolling along with the content.
+    contentItem: T.Item {
 
-        id: flickable
+        id: viewport
 
-        readonly property bool canScroll: flickable.contentHeight > flickable.height
-        readonly property real verticalOvershootNormalized: flickable.verticalOvershoot * 2 / flickable.height
-
-        clip: false
-
+        // These must live here rather than on the Flickable: QQuickControlPrivate::getContentWidth()
+        // reads contentItem->implicitWidth(), so a bare wrapper would report 0 and collapse
+        // ScrollView's own implicit size.
         implicitWidth: flickContent.implicitWidth
         implicitHeight: flickContent.implicitHeight
 
-        contentWidth: flickable.width
-        contentHeight: Math.max(flickContent.implicitHeight, flickable.height)
+        Rally.Flickable {
 
-        flickDeceleration: 200
-        maximumFlickVelocity: Number.MAX_VALUE
-        synchronousDrag: true
-        flickableDirection: T.Flickable.VerticalFlick
-        boundsMovement: T.Flickable.StopAtBounds
-        boundsBehavior: control.boundsStretch
-                        && flickable.canScroll ? T.Flickable.DragOverBounds : T.Flickable.StopAtBounds
+            id: flickable
 
-        T.Component.onCompleted: {
-            if ("acceptedButtons" in flickable) {
-                flickable.acceptedButtons = Qt.binding(() => {
-                                                           if (Rally.RootItem.isTouchInput) {
-                                                               return Qt.LeftButton
-                                                           }
-                                                           return Qt.NoButton
-                                                       })
+            anchors.fill: parent
+
+            // The old stock Flickable set clip: false. Clipping here is correct and costs nothing
+            // visually: the Scale squash never escapes the viewport (a beginning-overscroll uses
+            // origin.y 0 and grows downward, an end-overscroll uses origin.y flickContent.height
+            // and grows upward), and main.qml/TestDialog.qml already clip at the ScrollView root.
+            clip: true
+
+            readonly property bool canScroll: flickable.contentHeight > flickable.height
+            readonly property real verticalOvershootNormalized: flickable.verticalOvershoot * 2 / flickable.height
+
+            contentHeight: Math.max(flickContent.implicitHeight, flickable.height)
+
+            boundsMovement: T.Flickable.StopAtBounds
+            boundsBehavior: control.boundsStretch
+                            && flickable.canScroll ? T.Flickable.DragOverBounds : T.Flickable.StopAtBounds
+
+            // The content squash below is this ScrollView's overscroll feedback; Rally.Flickable's
+            // own Android edge glow on top of it would be doubled-up feedback.
+            overscrollGlow: false
+
+            T.Column {
+
+                id: flickContent
+                anchors.left: parent.left
+                anchors.right: parent.right
+                anchors.top: parent.top
+
+                children: control.otherChildren
+
+                function easeOutQuad(x) {
+                    return 1 - Math.pow(1 - x, 4)
+                }
+
+                transform: [
+                    T.Scale {
+                        origin.x: flickContent.width / 2
+                        origin.y: {
+                            if (flickable.verticalOvershoot < 0) {
+                                // dragged beyond the beginning
+                                return 0
+                            } else if (flickable.verticalOvershoot > 0) {
+                                // dragged beyond the beginning
+                                return flickContent.height
+                            } else {
+                                return 0
+                            }
+                        }
+                        yScale: {
+                            if (flickable.verticalOvershoot < 0 && !control.reloadable) {
+                                // dragged beyond the beginning
+                                return 1 + flickContent.easeOutQuad(-1 * flickable.verticalOvershootNormalized) / 20
+                            } else if (flickable.verticalOvershoot > 0) {
+                                // dragged beyond the beginning
+                                return 1 + flickContent.easeOutQuad(flickable.verticalOvershootNormalized) / 20
+                            } else {
+                                return 1
+                            }
+                        }
+                    }
+                ]
             }
         }
 
-        T.ScrollBar.vertical: T.ScrollBar {
+        // Rally.Flickable is a plain Item, so QtQuick.Controls' attached ScrollBar.vertical - which
+        // only attaches to a QQuickFlickable - is not available. Driven manually instead; the
+        // bindings reproduce QQuickFlickableVisibleArea::updateVisible() and the write-back
+        // reproduces QQuickScrollBarAttachedPrivate::scrollVertical().
+        T.ScrollBar {
 
             id: scrollBar
+
+            // orientation is left at ScrollBar's own default, Qt.Vertical.
+            anchors.top: parent.top
+            anchors.bottom: parent.bottom
+            anchors.right: parent.right
+
             interactive: Rally.RootItem.isMouseInput
             policy: flickable.canScroll ? T.ScrollBar.AlwaysOn : T.ScrollBar.AlwaysOff
 
             hoverEnabled: true
+
+            size: flickable.contentHeight > 0 ? flickable.height / flickable.contentHeight : 1
+
+            // Deliberately the *unclamped* position: adding the overshoot back in is what makes the
+            // handle squash against the end of the track during an overscroll, exactly as the
+            // attached ScrollBar did (visibleArea.yPosition is computed from the unclamped value).
+            position: flickable.contentHeight > 0
+                      ? (flickable.contentY + flickable.verticalOvershoot) / flickable.contentHeight
+                      : 0
+
+            onPositionChanged: {
+                const maxY = Math.max(0, flickable.contentHeight - flickable.height)
+                const cy = Math.max(0, Math.min(scrollBar.position * flickable.contentHeight, maxY))
+                // The fuzzy guard is what breaks the binding loop: when the change came *from* the
+                // flickable, cy already equals contentY and nothing is written back. ScrollBar's own
+                // handleMove() clamps to [0, 1-size], so during a bar drag this clamp is a no-op and
+                // the two expressions stay exact inverses.
+                if (Math.abs(cy - flickable.contentY) > 0.001) {
+                    // Grabbing the bar mid-fling would otherwise leave the fling ticker and this
+                    // write fighting over contentY on every frame.
+                    flickable.cancelFlick()
+                    flickable.contentY = cy
+                }
+            }
 
             contentItem: T.Item {
                 T.Rectangle {
@@ -143,48 +225,6 @@ T.Control {
                     visible: scrollBar.interactive && (scrollBar.hovered || scrollBar.pressed)
                 }
             }
-        }
-
-        T.Column {
-
-            id: flickContent
-            anchors.left: parent.left
-            anchors.right: parent.right
-            anchors.top: parent.top
-
-            children: control.otherChildren
-
-            function easeOutQuad(x) {
-                return 1 - Math.pow(1 - x, 4)
-            }
-
-            transform: [
-                T.Scale {
-                    origin.x: flickContent.width / 2
-                    origin.y: {
-                        if (flickable.verticalOvershoot < 0) {
-                            // dragged beyond the beginning
-                            return 0
-                        } else if (flickable.verticalOvershoot > 0) {
-                            // dragged beyond the beginning
-                            return flickContent.height
-                        } else {
-                            return 0
-                        }
-                    }
-                    yScale: {
-                        if (flickable.verticalOvershoot < 0 && !control.reloadable) {
-                            // dragged beyond the beginning
-                            return 1 + flickContent.easeOutQuad(-1 * flickable.verticalOvershootNormalized) / 20
-                        } else if (flickable.verticalOvershoot > 0) {
-                            // dragged beyond the beginning
-                            return 1 + flickContent.easeOutQuad(flickable.verticalOvershootNormalized) / 20
-                        } else {
-                            return 1
-                        }
-                    }
-                }
-            ]
         }
     }
 }

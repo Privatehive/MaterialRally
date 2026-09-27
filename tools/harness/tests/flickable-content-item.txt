@@ -1,0 +1,11 @@
+# contentItem is exposed like stock's: it holds the content, moves with contentX/contentY and
+# accepts items parented to it at runtime.
+load ../scenes/FlickableScene.qml
+
+expect flick.contentItem !== null && flick.contentItem.height === 4000
+eval flick.contentY = 300
+expect flick.contentItem.mapToItem(flick, 0, 0).y === -300
+
+eval H.set("added", Qt.createQmlObject('import QtQuick; Rectangle { y: 500; width: 10; height: 10 }', flick.contentItem))
+expect H.get("added").parent === flick.contentItem
+expect H.get("added").mapToItem(flick, 0, 0).y === 200

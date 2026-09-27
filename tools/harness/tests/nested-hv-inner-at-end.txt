@@ -1,0 +1,12 @@
+# Dragging the carousel further past its end does not leak into the feed: the directions differ,
+# so there is nothing to hand over.
+load ../scenes/NestedHorizontalInVerticalScene.qml
+eval carousel.contentX = carousel.contentWidth - carousel.width
+
+drag 350 400 100 400 400
+wait 50
+eval [outer.contentY, carousel.contentX]
+expect carousel.contentX === 1100 && outer.contentY === 0
+up
+wait 500
+expect carousel.contentX === 1100 && outer.contentY === 0
