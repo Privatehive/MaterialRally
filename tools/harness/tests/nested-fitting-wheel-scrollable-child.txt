@@ -1,0 +1,9 @@
+# Once the nested Flickable has something to scroll, the wheel over it scrolls it and not the
+# Flickable around it.
+load ../scenes/NestedFittingScene.qml
+eval inner.contentHeight = 600
+
+wheel 200 400 -120
+wait 400
+eval [inner.contentY, outer.contentY]
+expect inner.contentY > 0 && outer.contentY === 0

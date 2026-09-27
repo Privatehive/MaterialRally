@@ -239,6 +239,11 @@ T.Item {
     readonly property bool _canFlickY: (flickableDirection & T.Flickable.VerticalFlick) !== 0
     readonly property real _maxContentX: Math.max(0, contentWidth - width)
     readonly property real _maxContentY: Math.max(0, contentHeight - height)
+    // An axis this Flickable both may and can scroll along. Along any other axis it leaves drags
+    // and wheel events to the Flickable around it, as if it were plain content - see dragHandler's
+    // xAxis/yAxis and wheelHandler.enabled.
+    readonly property bool _scrollableX: _canFlickX && _maxContentX > 0
+    readonly property bool _scrollableY: _canFlickY && _maxContentY > 0
     readonly property bool _dragOverBounds: (boundsBehavior & T.Flickable.DragOverBounds) !== 0
     readonly property bool _followBounds: boundsMovement === T.Flickable.FollowBoundsBehavior
 
@@ -634,8 +639,8 @@ T.Item {
         // whole, unconsumed scroll on to its parent). QQuickDragHandler also refuses to activate
         // for a drag that is mostly along a disabled axis, so this decides the axis, not just the
         // movement.
-        xAxis.enabled: control._canFlickX && control._maxContentX > 0
-        yAxis.enabled: control._canFlickY && control._maxContentY > 0
+        xAxis.enabled: control._scrollableX
+        yAxis.enabled: control._scrollableY
 
         // Allocated once. Recording a sample allocates nothing, which matters because it happens
         // on every touch move. Shared with Rally.SwipeView - see FlingPhysics.VelocityTracker
@@ -787,7 +792,11 @@ T.Item {
         id: wheelHandler
 
         target: null
-        enabled: control.interactive
+        // Same rule as dragHandler's axes: with nothing to scroll, the wheel is left to the
+        // Flickable around it (as on Android, where a ScrollView that cannot move passes the scroll
+        // on). This has to be decided before the event arrives - the handler's `blocking` marks the
+        // event accepted before onWheel runs, and Qt never reads onWheel's event.accepted back.
+        enabled: control.interactive && (control._scrollableX || control._scrollableY)
         acceptedDevices: T.PointerDevice.Mouse | T.PointerDevice.TouchPad
 
         onWheel: (event) => {

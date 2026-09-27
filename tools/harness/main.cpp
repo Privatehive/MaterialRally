@@ -17,7 +17,7 @@
 //   drag X1 Y1 X2 Y2 MS [HZ]    press, then move linearly over MS at HZ (default 120); no release
 //   swipe X1 Y1 X2 Y2 MS [HZ]   drag + release at the end point
 //   click X Y                   mouse click (left button)
-//   wheel X Y DY                mouse wheel, DY in angle-delta units (120 = one notch)
+//   wheel X Y DY [DX]           mouse wheel, in angle-delta units (120 = one notch)
 //   shot FILE                   save a screenshot (PNG, path relative to the working directory)
 //   eval EXPR                   evaluate JS with the root object as scope and print the result
 //   expect EXPR                 like eval, but fail (exit code 1) if the result is falsy
@@ -355,7 +355,7 @@ public:
 		} else if (cmd == QLatin1String("wheel")) {
 			const QPointF pos = pt(0);
 			QWindowSystemInterface::handleWheelEvent(window, ulong(clock.elapsed()), pos, window->mapToGlobal(pos),
-			                                         QPoint(), QPoint(0, int(num(2))));
+			                                         QPoint(), QPoint(int(num(3)), int(num(2))));
 			QWindowSystemInterface::flushWindowSystemEvents();
 		} else if (cmd == QLatin1String("shot")) {
 			const QImage img = window->grabWindow();
