@@ -2,8 +2,8 @@ pragma ComponentBehavior: Bound
 
 import QtQml
 import QtQuick as T
+import MaterialRally as Rally
 import "./private" as RallyPrivate
-import "flingphysics.js" as FlingPhysics
 
 
 /*!
@@ -407,6 +407,52 @@ T.Item {
         rightGlow.release()
     }
 
+    // Fling physics, after android.widget.OverScroller.SplineOverScroller (AOSP,
+    // frameworks/base/core/java/android/widget/OverScroller.java). Android's fling distance and
+    // duration are NOT a constant-deceleration curve - they come from a velocity-dependent
+    // exponential model, which is what makes a hard flick travel much further (not just faster)
+    // than a gentle one. _flingDistance()/_flingDuration() are that same closed-form formula.
+    //
+    // The per-frame position curve (flickTicker) approximates Android's internal curve - which is
+    // built from an undocumented runtime lookup table we can't verify bit-for-bit here - with a
+    // power-ease-out curve, progress(t) = 1-(1-t)^n. Its exponent is chosen so the animation's
+    // starting speed exactly matches the release velocity (no perceptible jump/slowdown at the
+    // finger-lift handoff), not for stylistic reasons:
+    //
+    //   distance/duration_s always works out to INFLEXION*|v| (falls out of the _flingDistance/
+    //   _flingDuration formulas), and progress'(0) for 1-(1-t)^n is just n, so the animation's
+    //   real initial velocity is n*INFLEXION*|v|. Setting n = 1/INFLEXION makes that equal |v|
+    //   exactly. (Using DECELERATION_RATE as the exponent, as an earlier version did, undershoots
+    //   to ~82.5% of the true release velocity - it *looked* like a plausible "Android-ish" curve
+    //   shape but wasn't derived from this continuity constraint.)
+    //
+    // These used to live in flingphysics.js. They are typed QML functions instead so qmlcachegen
+    // can compile the fling setup - it cannot compile a call into a JS import.
+    readonly property real _flingDecelerationRate: Math.log(0.78) / Math.log(0.9) // ~2.358
+    readonly property real _flingInflexion: 0.35 // Where the velocity spline flattens
+
+    function _flingSplineDeceleration(velocity: real): real {
+        return Math.log(control._flingInflexion * Math.abs(velocity)
+                        / (control.flingFriction * control.flingPhysicalCoefficient))
+    }
+
+    // Total (unsigned) distance in px the fling travels before naturally coming to rest.
+    function _flingDistance(velocity: real): real {
+        if (velocity === 0)
+            return 0
+        const l = control._flingSplineDeceleration(velocity)
+        const rate = control._flingDecelerationRate
+        return control.flingFriction * control.flingPhysicalCoefficient * Math.exp(rate / (rate - 1) * l)
+    }
+
+    // Duration of the fling, in milliseconds.
+    function _flingDuration(velocity: real): real {
+        if (velocity === 0)
+            return 0
+        const l = control._flingSplineDeceleration(velocity)
+        return 1000 * Math.exp(l / (control._flingDecelerationRate - 1))
+    }
+
     function _startFling(vx: real, vy: real) {
         const allowX = control._canFlickX && control._dragAxis !== "y"
         const allowY = control._canFlickY && control._dragAxis !== "x"
@@ -415,62 +461,69 @@ T.Item {
             // pick whichever axis had the dominant velocity rather than flinging both at once
             // (only one axis can fling at a time - see flickTicker).
             if (Math.abs(vx) >= Math.abs(vy))
-                control._beginFling(T.Flickable.HorizontalFlick, vx, "contentX", "width", "contentWidth", leftGlow, rightGlow)
+                control._beginFling(T.Flickable.HorizontalFlick, vx)
             else
-                control._beginFling(T.Flickable.VerticalFlick, vy, "contentY", "height", "contentHeight", topGlow, bottomGlow)
+                control._beginFling(T.Flickable.VerticalFlick, vy)
         } else if (allowX) {
-            control._beginFling(T.Flickable.HorizontalFlick, vx, "contentX", "width", "contentWidth", leftGlow, rightGlow)
+            control._beginFling(T.Flickable.HorizontalFlick, vx)
         } else if (allowY) {
-            control._beginFling(T.Flickable.VerticalFlick, vy, "contentY", "height", "contentHeight", topGlow, bottomGlow)
+            control._beginFling(T.Flickable.VerticalFlick, vy)
         }
     }
 
-    function _beginFling(axis, v, contentProp, sizeProp, contentSizeProp, beginGlow, endGlow) {
+    // axis is T.Flickable.HorizontalFlick or T.Flickable.VerticalFlick.
+    function _beginFling(axis: int, v: real) {
         if (Math.abs(v) < 30)
             return
         const vel = control._clamp(v, -control.maximumFlickVelocity, control.maximumFlickVelocity)
-        let dist = FlingPhysics.flingDistance(vel, control.flingFriction, control.flingPhysicalCoefficient)
-        let duration = FlingPhysics.flingDuration(vel, control.flingFriction, control.flingPhysicalCoefficient)
+        let dist = control._flingDistance(vel)
+        let duration = control._flingDuration(vel)
         if (dist <= 0 || duration <= 0)
             return
         // content follows the finger, so positive pointer velocity moves content the same way
         // drag deltas do: contentX/Y decreases - see _moveContent.
         dist = vel < 0 ? -dist : dist
 
-        const maxValue = Math.max(0, control[contentSizeProp] - control[sizeProp])
-        const rawTarget = control[contentProp] - dist
+        const horizontal = axis === T.Flickable.HorizontalFlick
+        const current = horizontal ? control.contentX : control.contentY
+        const maxValue = horizontal ? control._maxContentX : control._maxContentY
+        const rawTarget = current - dist
         const target = control._clamp(rawTarget, 0, maxValue)
         // Already at the bound this fling points towards: nothing to fling. Starting one anyway
         // ran a zero-duration fling whose single frame fired the absorb glow, right after the glow
         // pulled by the drag had receded - the edge indicator showed up twice. Android's
         // ScrollView doesn't fling here either (flingWithNestedDispatch's canFling).
-        if (target === control[contentProp])
+        if (target === current)
             return
 
         // If the bound clips the target short of the full computed distance, shorten the
         // duration by the same fraction. Our curve's shape only depends on distance/duration
-        // (see splineProgress), so scaling both by the same factor keeps the animation starting
+        // (see flickTicker), so scaling both by the same factor keeps the animation starting
         // at the correct measured release velocity and just settles at the bound sooner - rather
         // than keeping the full original duration and crawling the much-shorter remaining
         // distance for many extra seconds (visible on real devices as content appearing to grind
         // to a near-halt right as it should be flying to the edge).
         if (target !== rawTarget) {
-            const travelled = Math.abs(target - control[contentProp])
+            const travelled = Math.abs(target - current)
             const durationFraction = Math.abs(dist) > 0 ? Math.min(1, travelled / Math.abs(dist)) : 0
             duration = duration * durationFraction
         }
 
         flickTicker.flingAxis = axis
-        flickTicker.flingStartValue = control[contentProp]
+        flickTicker.flingStartValue = current
         flickTicker.flingTargetValue = target
         flickTicker.flingDurationMs = duration
 
+        flickTicker.flingAbsorbGlow = null
         if (target !== rawTarget) {
             const clipped = Math.abs(rawTarget - target)
             flickTicker.flingAbsorbFraction = Math.min(1, Math.sqrt(clipped / Math.max(1, Math.abs(dist))))
-            flickTicker.flingAbsorbGlow = control.overscrollGlow ? (rawTarget > target ? endGlow : beginGlow) : null
-        } else {
-            flickTicker.flingAbsorbGlow = null
+            if (control.overscrollGlow) {
+                if (rawTarget > target)
+                    flickTicker.flingAbsorbGlow = horizontal ? rightGlow : bottomGlow
+                else
+                    flickTicker.flingAbsorbGlow = horizontal ? leftGlow : topGlow
+            }
         }
 
         // running is driven entirely by the `flingAxis !== 0` binding below; reset() only
@@ -643,10 +696,10 @@ T.Item {
         xAxis.enabled: control._scrollableX
         yAxis.enabled: control._scrollableY
 
-        // Allocated once. Recording a sample allocates nothing, which matters because it happens
-        // on every touch move. Shared with Rally.SwipeView - see FlingPhysics.VelocityTracker
-        // for why Qt's own centroid.velocity is not used.
-        readonly property var _tracker: new FlingPhysics.VelocityTracker(60)
+        // Shared with Rally.SwipeView - see VelocityTracker (velocitytracker.h) for why Qt's own
+        // centroid.velocity is not used. Typed, rather than a JS object in a `var`, so the
+        // per-touch-move _applyTravel that records into it stays AOT-compiled.
+        readonly property Rally.VelocityTracker _tracker: Rally.VelocityTracker {}
 
         onActiveChanged: {
             if (dragHandler.active) {
@@ -769,17 +822,25 @@ T.Item {
         // picked up late changes only the id, since its press position is never updated.
         // centroidChanged is emitted before the handler activates and before activeTranslation
         // changes, so the anchor is always set in time.
+        //
+        // Everything is read into locals before the first write: qmlcachegen cannot prove a
+        // property write leaves the centroid untouched, so reading it after one knocked this
+        // per-touch-move handler out of AOT compilation.
         onCentroidChanged: {
             const c = dragHandler.centroid
-            const p = c.scenePressPosition
-            if (c.id !== dragHandler._anchorId || p.x !== dragHandler._anchorPressX || p.y !== dragHandler._anchorPressY) {
-                dragHandler._anchorId = c.id
-                dragHandler._anchorPressX = p.x
-                dragHandler._anchorPressY = p.y
-                dragHandler._anchorX = c.scenePosition.x
-                dragHandler._anchorY = c.scenePosition.y
+            const id = c.id
+            const pressX = c.scenePressPosition.x
+            const pressY = c.scenePressPosition.y
+            const x = c.scenePosition.x
+            const y = c.scenePosition.y
+            if (id !== dragHandler._anchorId || pressX !== dragHandler._anchorPressX || pressY !== dragHandler._anchorPressY) {
+                dragHandler._anchorId = id
+                dragHandler._anchorPressX = pressX
+                dragHandler._anchorPressY = pressY
+                dragHandler._anchorX = x
+                dragHandler._anchorY = y
             }
-            if (flickTicker.flingAxis !== 0 && c.id !== -1)
+            if (flickTicker.flingAxis !== 0 && id !== -1)
                 control._cancelFling()
         }
     }
@@ -815,9 +876,10 @@ T.Item {
         }
     }
 
-    // Drives the fling per-frame from FlingPhysics.splineProgress(), the same lookup-table
-    // curve android.widget.OverScroller.SplineOverScroller.update() samples every frame - a
-    // fixed easing curve (e.g. NumberAnimation + Easing.OutQuad) can't reproduce this shape.
+    // Drives the fling per-frame along progress(t) = 1 - (1 - t)^(1 / INFLEXION), our stand-in for
+    // the lookup-table curve android.widget.OverScroller.SplineOverScroller.update() samples every
+    // frame - see _flingDistance for why that exponent. A fixed easing curve (e.g.
+    // NumberAnimation + Easing.OutQuad) can't reproduce this shape.
     T.FrameAnimation {
 
         id: flickTicker
@@ -833,13 +895,14 @@ T.Item {
         property real flingDurationMs: 0
         property RallyPrivate.EdgeGlow flingAbsorbGlow: null
         property real flingAbsorbFraction: 0
+        readonly property real _progressExponent: 1 / control._flingInflexion
 
         running: flingAxis !== 0
 
         onTriggered: {
             const t = flickTicker.flingDurationMs > 0
                 ? Math.min(1, flickTicker.elapsedTime * 1000 / flickTicker.flingDurationMs) : 1
-            const progress = FlingPhysics.splineProgress(t)
+            const progress = t >= 1 ? 1 : 1 - Math.pow(1 - t, flickTicker._progressExponent)
             const value = flickTicker.flingStartValue
                 + progress * (flickTicker.flingTargetValue - flickTicker.flingStartValue)
 

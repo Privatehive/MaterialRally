@@ -1,6 +1,6 @@
 import QtQml
 import QtQuick as T
-import "flingphysics.js" as FlingPhysics
+import MaterialRally as Rally
 
 
 /*!
@@ -314,12 +314,11 @@ T.Item {
         grabPermissions: T.PointerHandler.CanTakeOverFromItems | T.PointerHandler.CanTakeOverFromHandlersOfDifferentType
                          | T.PointerHandler.ApprovesTakeOverByItems | T.PointerHandler.ApprovesCancellation
 
-        // Shared with Rally.Flickable - see FlingPhysics.VelocityTracker for why a smoothed
+        // Shared with Rally.Flickable - see VelocityTracker (velocitytracker.h) for why a smoothed
         // estimate like centroid.velocity is not good enough here, which is what
-        // flingCommitVelocity needs to judge accurately. Allocated once; recording a sample
-        // allocates nothing, unlike the {x, t} object literal plus Array.shift() this replaces,
-        // which ran on every single touch move.
-        readonly property var _tracker: new FlingPhysics.VelocityTracker(60)
+        // flingCommitVelocity needs to judge accurately. Typed, rather than a JS object in a
+        // `var`, so the per-touch-move handlers using it stay AOT-compiled.
+        readonly property Rally.VelocityTracker _tracker: Rally.VelocityTracker {}
 
         onActiveChanged: {
             if (dragHandler.active) {
@@ -362,14 +361,17 @@ T.Item {
         // for how a new point is recognised.
         onCentroidChanged: {
             const c = dragHandler.centroid
-            const p = c.scenePressPosition
-            if (c.id !== dragHandler._anchorId || p.x !== dragHandler._anchorPressX || p.y !== dragHandler._anchorPressY) {
-                dragHandler._anchorId = c.id
-                dragHandler._anchorPressX = p.x
-                dragHandler._anchorPressY = p.y
-                dragHandler._anchorX = c.scenePosition.x
+            const id = c.id
+            const pressX = c.scenePressPosition.x
+            const pressY = c.scenePressPosition.y
+            const x = c.scenePosition.x
+            if (id !== dragHandler._anchorId || pressX !== dragHandler._anchorPressX || pressY !== dragHandler._anchorPressY) {
+                dragHandler._anchorId = id
+                dragHandler._anchorPressX = pressX
+                dragHandler._anchorPressY = pressY
+                dragHandler._anchorX = x
             }
-            if (settleAnim.running && c.id !== -1)
+            if (settleAnim.running && id !== -1)
                 settleAnim.stop()
         }
     }

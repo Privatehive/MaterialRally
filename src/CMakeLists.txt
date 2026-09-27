@@ -35,6 +35,8 @@ qt_add_qml_module(MaterialRally
         rootitemattachedtype.cpp
         units.h
         units.cpp
+        velocitytracker.h
+        velocitytracker.cpp
 
         QML_FILES
         MaterialRally/ListView.qml
@@ -68,7 +70,6 @@ qt_add_qml_module(MaterialRally
         MaterialRally/SwipeView.qml
         MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
         MaterialRally/Helper.qml
-        MaterialRally/flingphysics.js
         MaterialRally/private/SizeLabel.qml
         MaterialRally/private/ReloadIndicator.qml
         MaterialRally/private/EdgeGlow.qml
