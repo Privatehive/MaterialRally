@@ -4,6 +4,53 @@ import QtQuick.Controls.impl
 import QtQuick.Controls.Material
 import QtQuick.Controls.Material.impl
 
+
+/*!
+    \qmltype TextArea
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits QtQuick.Controls::TextArea
+
+    \brief A multi-line text input area in the Material Rally style.
+
+    Rally.TextArea is a \l [QML] {QtQuick.Controls::TextArea}{TextArea} with a dark, flat
+    background and a thin accent colored border that fades in while the text area has active
+    focus (and is not read-only). Text can be selected with the mouse and a tab stop is 20 px wide.
+
+    Like the stock TextArea, it does not scroll on its own. Put it into a \l ScrollView if the
+    text can get longer than the available space.
+
+    \section1 Example
+
+    \qml
+    import QtQuick
+    import MaterialRally as Rally
+
+    Rally.TextArea {
+        width: 400
+        placeholderText: qsTr("Notes")
+        wrapMode: TextEdit.Wrap
+    }
+    \endqml
+
+    A read-only text area showing a log:
+
+    \qml
+    Rally.ScrollView {
+        width: 400
+        height: 200
+
+        Rally.TextArea {
+            width: parent.width
+            readOnly: true
+            font.family: "Roboto Mono"
+            text: logger.text
+        }
+    }
+    \endqml
+
+    \sa TextField
+*/
 T.TextArea {
 
     id: control

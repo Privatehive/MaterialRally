@@ -4,10 +4,63 @@ import QtQuick.Controls.Material as T
 import QtQuick.Effects
 import MaterialRally
 
+
+/*!
+    \qmltype InfoDialog
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits QtQuick.Controls::Dialog
+
+    \brief A small modal dialog that shows a message and a dismiss button.
+
+    InfoDialog is a modal \l [QML] {QtQuick.Controls::Dialog}{Dialog} centered in the window.
+    It shows a \l text and a \e Dismiss button, and blurs the application content behind it
+    while it is open. It can be closed with the \e Dismiss button or the escape key.
+
+    \l GroupBox uses an InfoDialog to show its \l {GroupBox::infoText}{infoText}.
+
+    \note InfoDialog needs a \l RallyApplicationWindow or \l RallyRootPage as root item of the
+    application to blur its content.
+
+    \section1 Example
+
+    The easiest way to show an InfoDialog is \l {Helper::createInfoDialog()}{Rally.Helper.createInfoDialog()},
+    which also destroys the dialog after it has been closed:
+
+    \qml
+    import QtQuick
+    import MaterialRally as Rally
+
+    Rally.Button {
+        text: qsTr("What is this?")
+        onClicked: Rally.Helper.createInfoDialog(qsTr("The budget shows how much money is left for this month."))
+    }
+    \endqml
+
+    It can also be declared and opened like any other popup:
+
+    \code
+    Rally.InfoDialog {
+        id: infoDialog
+        text: qsTr("Your session has expired. Please log in again.")
+        onClosed: loginPage.visible = true
+    }
+
+    Component.onCompleted: infoDialog.open()
+    \endcode
+
+    \sa Helper, Dialog
+*/
 T.Dialog {
 
     id: control
 
+
+    /*!
+      \qmlproperty string InfoDialog::text
+
+      The message shown in the dialog. Long texts are wrapped.
+    */
     property alias text: label.text
 
     focus: true

@@ -12,13 +12,82 @@ import "./private" as RallyPrivate
     \ingroup qmlclass
     \inherits Control
 
-    \brief Scrollable view.
+    \brief A vertically scrolling view for user-defined content.
 
-    ScrollView provides vertical scrolling for user-defined content. A vertical scrollbar is displayed if the content height is greater than the height of the ScrolView - otherwise it is hidden.
-    If Mouse input is detected, the view can only be scrolled via mouse wheel or via the scrollbar.
-    If Touch input is detected, the view can only be swiped and the scrollbar becomes a non-interactive indicator.
+    ScrollView provides vertical scrolling for its child items. The children are stacked in a
+    \l [QML] {QtQuick::Column}{Column} that spans the width of the view, and are scrolled by a
+    \l Flickable. The view can be scrolled as soon as the content is higher than the view.
+
+    ScrollView adapts to the input device the user last interacted with (see
+    \c {Rally.RootItem.isTouchInput}):
+    \list
+    \li With \b mouse input, the view is scrolled with the mouse wheel or the scroll bar. The
+        scroll bar is interactive and gets wider while hovered.
+    \li With \b touch input, the view is scrolled by swiping and flicking the content, and the
+        scroll bar becomes a thin, non-interactive indicator. When the content is dragged past
+        its top or bottom, it is stretched slightly (see \l boundsStretch).
+    \endlist
+
+    The scroll bar is only shown if the content is higher than the view.
+
+    ScrollView works well with nested horizontal swiping, e.g. a \l SwipeView inside a
+    ScrollView: a vertical drag scrolls the view, a horizontal one swipes the pages.
 
     \image scroll-view.png "ScrollView"
+
+    \section1 Example
+
+    Children are placed below each other. Bind their width to the view's width, so they do not
+    need to scroll horizontally:
+
+    \qml
+    import QtQuick
+    import QtQuick.Controls
+    import MaterialRally as Rally
+
+    Rally.ScrollView {
+        anchors.fill: parent
+
+        Rally.GroupBox {
+            width: parent.width
+            title: qsTr("Accounts")
+            // ...
+        }
+
+        Rally.GroupBox {
+            width: parent.width
+            title: qsTr("Bills")
+            // ...
+        }
+
+        Repeater {
+            model: 20
+            delegate: Label {
+                required property int index
+                text: qsTr("Line %1").arg(index)
+            }
+        }
+    }
+    \endqml
+
+    A layout can be used as the single child as well. Its implicit height determines how far the
+    view can be scrolled:
+
+    \qml
+    Rally.ScrollView {
+        anchors.fill: parent
+
+        ColumnLayout {
+            width: parent.width
+            spacing: 10
+
+            Rally.TextField { Layout.fillWidth: true }
+            Rally.TextArea { Layout.fillWidth: true }
+        }
+    }
+    \endqml
+
+    \sa Flickable, ScrollablePage
 */
 T.Control {
 
@@ -29,11 +98,11 @@ T.Control {
       \qmlproperty bool ScrollView::reloadable
       \default false
 
-      Not usable right now - in development!
+      \warning Not usable yet - this feature is still in development.
 
-      Only works with Touch input!
-
-      If \a reloadable equals true, the ScrollView can be dragged over its top bounds. Then a reload indicator becomes visible. If draged further until the reload indicator exceeds the threshold the user can release the drag and the reload signal is emitted.
+      If \c true, the content can be dragged down past its top (touch input only) and a reload
+      indicator appears. Dragging it further than a threshold and releasing it is meant to
+      trigger a reload.
     */
     property bool reloadable: false
 
@@ -42,7 +111,10 @@ T.Control {
       \qmlproperty bool ScrollView::boundsStretch
       \default Rally.RootItem.isTouchInput
 
-      If \boundsStretch equals true, the ScrollView will stretch its content as soon as the top or bottom bounds are reached. This is useful for touch input to indicate that the bounds have been reached.
+      If \c true, the content is stretched slightly when it is dragged past its top or bottom,
+      to show the user that the end of the content has been reached. By default this is only
+      enabled while the user interacts by touch. Has no effect if the content is not higher than
+      the view.
     */
     property bool boundsStretch: Rally.RootItem.isTouchInput
 
@@ -52,6 +124,13 @@ T.Control {
     implicitWidth: Math.max(implicitBackgroundWidth + leftInset + rightInset,
                             implicitContentWidth + leftPadding + rightPadding)
 
+
+    /*!
+      \qmlproperty list<Item> ScrollView::otherChildren
+
+      The scrolling content. This is the default property, so child items can simply be declared
+      inside the ScrollView. They are stacked in a column that spans the width of the view.
+    */
     default property list<T.Item> otherChildren: []
 
     RallyPrivate.ReloadIndicator {

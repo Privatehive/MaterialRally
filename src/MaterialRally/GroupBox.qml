@@ -10,14 +10,80 @@ import "helper.js" as Helper
     \qmltype GroupBox
     \inqmlmodule MaterialRally
     \ingroup qmlclass
-    \inherits T.GroupBox
+    \inherits QtQuick.Controls::GroupBox
 
     \brief Visual frame and title for a logical group of controls.
 
-    A group-box visually groups any child items together. A group-box shows a title and optionally an icon. A group-box may contain a busy-action that can be triggered by the user.
-    The group-box can also show a help pop-up.
+    A group box visually groups its child items on a card with a header. The header shows the
+    \c title, optionally an \l icon to the left of the title and an info button to the right of
+    it (see \l infoText). Below the header a divider separates it from the content.
+
+    A \l mainAction can be added to the right side of the header:
+    \list
+    \li A regular BusyAction is shown as an upper case text button. While the action is
+        \l {BusyAction::delayedBusy}{busy}, the divider turns into a progress bar and the button
+        is disabled.
+    \li A \c checkable BusyAction is shown as a switch. Switching it off
+        folds the group box to its header, switching it on unfolds it again.
+    \endlist
+
+    Height changes of the group box are animated, see \l animationDuration.
 
     \image group-box.png "GroupBox"
+
+    \section1 Examples
+
+    A group box with a title, an icon, a help text and a reload action:
+
+    \qml
+    import QtQuick
+    import QtQuick.Controls
+    import QtQuick.Layouts
+    import MaterialRally as Rally
+
+    Rally.GroupBox {
+        width: 400
+        title: qsTr("Accounts")
+        icon.source: "qrc:/icons/bank.svg"
+        infoText: qsTr("All accounts of the current user. Pull the data again with 'Reload'.")
+
+        mainAction: Rally.BusyAction {
+            text: qsTr("Reload")
+            onTriggered: {
+                busy = true
+                backend.reload(() => busy = false)
+            }
+        }
+
+        ColumnLayout {
+            anchors.fill: parent
+
+            Label { text: qsTr("Checking: 2.215,13 €") }
+            Label { text: qsTr("Home Savings: 8.676,88 €") }
+        }
+    }
+    \endqml
+
+    A group box that can be folded with a switch in its header:
+
+    \qml
+    Rally.GroupBox {
+        Layout.fillWidth: true
+        title: qsTr("Proxy")
+
+        mainAction: Rally.BusyAction {
+            checkable: true
+            onToggled: settings.proxyEnabled = checked
+        }
+
+        Rally.FormLayout {
+            Label { text: qsTr("Host") }
+            Rally.TextField { text: settings.proxyHost }
+        }
+    }
+    \endqml
+
+    \sa BusyAction, CollapsibleControl
 */
 T.GroupBox {
 
@@ -28,7 +94,11 @@ T.GroupBox {
       \qmlproperty BusyAction GroupBox::mainAction
       \default null
 
-      A BusyAction that can be triggerd by the user. The text of the action is shown in the header of the group-box. If triggered, the group-box will show a progress indicator.
+      A BusyAction the user can trigger from the header of the group box. A non-checkable action
+      is shown as a text button, a progress bar is shown while the action is busy. A checkable
+      action is shown as a switch that folds and unfolds the group box.
+
+      \sa BusyAction
     */
     property BusyAction mainAction
 
@@ -37,25 +107,36 @@ T.GroupBox {
       \qmlproperty string GroupBox::infoText
       \default ""
 
-        If provided, an info icon is displayed to the right of the group-box title. When the user clicks on it, a pop-up opens with the specified text.
+      If not empty, an info icon is shown to the right of the title. When the user clicks it, an
+      \l InfoDialog with this text opens. Use it for help texts that are too long for the title.
     */
     property string infoText: ""
 
 
     /*!
-      \qmlproperty icon group GroupBox::icon
-      \default ""
+      \qmlproperty icon GroupBox::icon
 
-        If provided, the specified icon is displayed to the left of the group-box title. Use icon.name or icon.source and icon.color.
+      The icon shown to the left of the title. Set \c {icon.source} or \c {icon.name}, and
+      optionally \c {icon.color}. No icon is shown by
+      default.
+
+      \qml
+      Rally.GroupBox {
+          title: qsTr("Warnings")
+          icon.source: "qrc:/icons/alert.svg"
+          icon.color: Material.color(Material.Amber)
+      }
+      \endqml
     */
     property alias icon: iconLabel.icon
 
 
     /*!
-      \qmlproperty int group GroupBox::animationDuration
+      \qmlproperty int GroupBox::animationDuration
       \default 200
 
-        Animates changes in the height of the group-box. Set this to 0 to disable animations.
+      The duration, in milliseconds, of the animation that runs when the height of the group box
+      changes, e.g. when it is folded. Set this to 0 to disable the animation.
     */
     property alias animationDuration: animation.duration
 

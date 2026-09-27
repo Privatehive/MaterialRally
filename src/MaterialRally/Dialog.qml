@@ -3,12 +3,143 @@ import QtQuick.Controls as T
 import QtQuick.Controls.Material as T
 import MaterialRally
 
+
+/*!
+    \qmltype Dialog
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits QtQuick.Controls::Dialog
+
+    \brief A modal full-screen dialog with a tool bar, title and actions.
+
+    Rally.Dialog is a modal \l [QML] {QtQuick.Controls::Dialog}{Dialog} that covers the whole
+    window, like a page that is pushed on top of the application. When it opens, it grows out of
+    the application content while the content behind it shrinks slightly into the background;
+    when it closes, the animation is reversed.
+
+    The dialog has a tool bar with
+    \list
+    \li a back button on the left, which emits \l backButtonClicked(),
+    \li the \c title in the center, and
+    \li the \l actions on the right. If there is not enough room next to the title, the actions
+        are shown as icons only.
+    \endlist
+
+    The dialog is not closed automatically when the back button is clicked - handle
+    \l backButtonClicked() and call \c close(), \c accept() or \c reject(), e.g. after asking
+    the user to discard unsaved changes.
+
+    Setting \l busy shows an indeterminate progress bar below the tool bar and disables the
+    dialog. A running \l BusyAction shows a busy indicator on its tool button instead.
+
+    The content of the dialog is kept inside the window's safe area. A \c footer assigned to the
+    dialog is moved onto the inner page below the content, e.g. for a row of buttons.
+
+    \note The dialog needs a \l RallyApplicationWindow or \l RallyRootPage as root item of the
+    application. The easiest way to show a dialog defined in its own file is
+    \l {Helper::createDialog()}{Rally.Helper.createDialog()}, which also destroys it after it has
+    been closed.
+
+    \section1 Example
+
+    \qml
+    // EditAccountDialog.qml
+    import QtQuick
+    import QtQuick.Layouts
+    import MaterialRally as Rally
+
+    Rally.Dialog {
+        id: dialog
+
+        property string accountName
+
+        title: qsTr("Edit account")
+
+        onBackButtonClicked: dialog.reject()
+
+        actions: [
+            Rally.BusyAction {
+                id: saveAction
+                text: qsTr("Save")
+                icon.source: "qrc:/icons/content-save.svg"
+                onTriggered: {
+                    saveAction.busy = true
+                    backend.saveAccount(nameField.text, () => {
+                        saveAction.busy = false
+                        dialog.accept()
+                    })
+                }
+            }
+        ]
+
+        Rally.ScrollView {
+            anchors.fill: parent
+
+            ColumnLayout {
+                width: parent.width
+
+                Rally.TextField {
+                    id: nameField
+                    Layout.fillWidth: true
+                    text: dialog.accountName
+                    placeholderText: qsTr("Name")
+                }
+            }
+        }
+    }
+    \endqml
+
+    \qml
+    // Opening the dialog
+    Rally.Button {
+        text: qsTr("Edit")
+        onClicked: {
+            const dialog = Rally.Helper.createDialog(Qt.resolvedUrl("EditAccountDialog.qml"),
+                                                     {"accountName": "Checking"})
+            dialog.accepted.connect(() => snackBar.pushMessage(qsTr("Saved")))
+        }
+    }
+    \endqml
+
+    A dialog can also be declared inline and opened with \c open():
+
+    \code
+    Rally.Dialog {
+        id: settingsDialog
+        title: qsTr("Settings")
+        onBackButtonClicked: settingsDialog.close()
+        // ...
+    }
+
+    Rally.Button {
+        text: qsTr("Settings")
+        onClicked: settingsDialog.open()
+    }
+    \endcode
+
+    \sa Helper, InfoDialog, BusyAction
+*/
 T.Dialog {
 
     id: control
 
+
+    /*!
+      \qmlproperty bool Dialog::busy
+      \default false
+
+      If \c true, an indeterminate progress bar is shown below the tool bar and the whole dialog
+      is disabled, e.g. while its data is being loaded or saved.
+    */
     property alias busy: progressBar.visible
 
+
+    /*!
+      \qmlsignal Dialog::backButtonClicked()
+
+      This signal is emitted when the back button in the tool bar is clicked. The dialog is not
+      closed automatically.
+    */
     signal backButtonClicked
 
     T.Material.elevation: 0
@@ -25,6 +156,25 @@ T.Dialog {
     margins: 0
     padding: 0
 
+
+    /*!
+      \qmlmethod void Dialog::openWithAnimOffset(real yOffset)
+
+      Opens the dialog like \c open(), but lets the open animation start at the vertical
+      position \a yOffset (in pixels from the top of the window) instead of the center of the
+      window. Use it to let the dialog grow out of the item that opened it:
+
+      \qml
+      Rally.ItemDelegate {
+          onClicked: {
+              const pos = mapToItem(null, 0, height / 2)
+              detailDialog.openWithAnimOffset(pos.y)
+          }
+      }
+      \endqml
+
+      The closing animation shrinks the dialog back to the same position.
+    */
     function openWithAnimOffset(yOffset) {
 
         if (yOffset)
@@ -32,8 +182,37 @@ T.Dialog {
         control.open()
     }
 
+
+    /*!
+      \qmlproperty list<BusyAction> Dialog::actions
+
+      The actions shown as tool buttons on the right side of the tool bar. An action is disabled
+      and shows a busy indicator while its \l {BusyAction::busy}{busy} property is \c true.
+
+      \code
+      actions: [
+          Rally.BusyAction {
+              text: qsTr("Delete")
+              icon.source: "qrc:/icons/delete.svg"
+              onTriggered: backend.deleteAccount()
+          },
+          Rally.BusyAction {
+              text: qsTr("Save")
+              icon.source: "qrc:/icons/content-save.svg"
+              onTriggered: backend.saveAccount()
+          }
+      ]
+      \endcode
+    */
     property list<BusyAction> actions
 
+
+    /*!
+      \qmlproperty list<QtObject> Dialog::content
+
+      The content of the dialog. This is the default property, so child items can simply be
+      declared inside the Dialog. They are placed on an inner page below the tool bar.
+    */
     default property list<QtObject> content: []
 
     Component.onCompleted: {

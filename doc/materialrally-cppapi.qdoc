@@ -4,10 +4,11 @@
     \title Material Rally C++ API
     \ingroup modules
 
-    \brief Provides macros and functions for tests.
+    \brief The C++ part of Material Rally.
 
-    The C++ macros and functions can be included into your application using
-    the following include statement:
+    Link your application against the \c MaterialRally CMake target to use the module:
 
-    \sa {Executing C++ Before QML Tests}
+    \code
+    target_link_libraries(MyApp PRIVATE MaterialRally)
+    \endcode
 */

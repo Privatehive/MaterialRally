@@ -9,40 +9,116 @@ import MaterialRally as Rally
     \ingroup qmlclass
     \inherits Item
 
-    \brief A horizontally paged container, swiped between with a finger - built entirely on Qt
-    Quick Input Handlers (DragHandler), no MouseArea, no QtQuick.Controls.SwipeView/Flickable.
+    \brief A horizontally paged container, swiped between with a finger.
 
-    Rally.SwipeView is a drop-in-familiar replacement for QtQuick.Controls.SwipeView: pages are
-    declared as children, currentIndex tracks/drives which page is shown, and swiping snaps to
-    the nearest page on release - or, if released with enough velocity, commits to the next/
-    previous page even from a small drag (matching Android's ViewPager "fling to turn the page"
-    feel), reusing the same release-velocity tracking approach as Rally.Flickable.
+    Rally.SwipeView is a drop-in-familiar replacement for
+    \l [QML] {QtQuick.Controls::SwipeView}{QtQuick.Controls.SwipeView}: pages are declared as
+    children, \l currentIndex tracks and drives which page is shown, and swiping snaps to the
+    nearest page on release - or, if released with enough velocity, commits to the next or
+    previous page even from a small drag (matching the "fling to turn the page" feel of Android's
+    ViewPager). It is built entirely on Qt Quick Input Handlers, reusing the release-velocity
+    tracking of Rally.Flickable.
 
-    Pages are automatically sized to fill the SwipeView (width/height bound to it), matching
-    stock SwipeView's behavior.
+    Pages are automatically sized to fill the SwipeView, matching stock SwipeView's behavior. If
+    the SwipeView has no explicit size, it takes the implicit size of the current page.
 
-    Like QtQuick.Controls.SwipeView, each page has the attached properties SwipeView.index,
-    SwipeView.isCurrentItem, SwipeView.isNextItem, SwipeView.isPreviousItem and SwipeView.view,
-    e.g. a lazy Loader's \c{active: Rally.SwipeView.isCurrentItem || Rally.SwipeView.isNextItem
-    || Rally.SwipeView.isPreviousItem}. They are set on the pages themselves only (see
-    SwipeViewAttached in swipeviewbase.h), and follow currentIndex, which changes mid-swipe as
-    soon as the next page is more than half in view - as stock's does.
-
-    Like Rally.Flickable, dragging to change pages is a touch (and stylus) gesture only - mouse/
-    touchpad users are expected to navigate via whatever UI drives currentIndex (e.g. tab
+    Like Rally.Flickable, dragging to change pages is a touch (and stylus) gesture only - mouse
+    and touchpad users are expected to navigate via whatever UI drives \l currentIndex (e.g. tab
     buttons), not by dragging the page content itself.
 
-    Being DragHandler-based rather than Flickable-based is also what makes this safe to nest
-    inside a vertically scrolling Rally.ScrollView. QQuickFlickable decides to steal a drag from
-    \c{|dx|} alone (qquickflickable.cpp, handleMoveEvent: it tests deltas.x() against the drag
-    threshold and never compares it to deltas.y()), so a stock horizontal SwipeView hijacks
-    vertical scrolls; and once it has grabbed, an ancestor cannot take the grab back, because
-    QQuickPointerHandler::approveGrabTransition() only lets a handler steal from an item that is
-    its *ancestor*, not from a descendant holding keepTouchGrab. QQuickDragHandler instead
-    refuses to activate at all when the drag is mostly along its disabled axis
-    (handlePointerEventImpl: "If vertical dragging is disallowed, but the user is dragging mostly
-    vertically, then don't activate"), which is the axis arbitration this nesting needs.
+    \section1 Attached properties
+
+    Like with QtQuick.Controls.SwipeView, each page has the attached properties
+    \l {SwipeView::index}{SwipeView.index}, \l {SwipeView::isCurrentItem}{SwipeView.isCurrentItem},
+    \l {SwipeView::isNextItem}{SwipeView.isNextItem},
+    \l {SwipeView::isPreviousItem}{SwipeView.isPreviousItem} and \l {SwipeView::view}{SwipeView.view}.
+    They are set on the pages themselves only - the SwipeView's direct children or the delegates
+    of a Repeater - not on items further down inside a page. They follow \l currentIndex, which
+    changes mid-swipe as soon as the next page is more than half in view, as stock's does.
+
+    \section1 Nesting in a ScrollView
+
+    Rally.SwipeView can be placed inside a vertically scrolling Rally \l ScrollView or
+    \l Flickable: a drag that is mostly horizontal swipes the pages, a drag that is mostly
+    vertical scrolls the view around it. A stock (Flickable-based) SwipeView cannot be nested like
+    this, it steals vertical drags meant for the ScrollView.
+
+    \section1 Examples
+
+    A tab bar and a SwipeView driving each other:
+
+    \qml
+    import QtQuick
+    import QtQuick.Controls
+    import MaterialRally as Rally
+
+    Page {
+        header: TabBar {
+            id: tabBar
+            currentIndex: swipeView.currentIndex
+            TabButton { text: qsTr("Overview") }
+            TabButton { text: qsTr("Accounts") }
+            TabButton { text: qsTr("Bills") }
+        }
+
+        Rally.SwipeView {
+            id: swipeView
+            anchors.fill: parent
+            currentIndex: tabBar.currentIndex
+
+            Rally.ScrollView {
+                // overview ...
+            }
+
+            Rally.ScrollView {
+                // accounts ...
+            }
+
+            Rally.ScrollView {
+                // bills ...
+            }
+        }
+    }
+    \endqml
+
+    Pages created by a Repeater and loaded lazily - only the current page and its two neighbours
+    are loaded:
+
+    \qml
+    Rally.ScrollView {
+        anchors.fill: parent
+
+        Rally.SwipeView {
+            id: view
+            width: parent.width
+
+            Repeater {
+                model: ["Overview.qml", "Accounts.qml", "Bills.qml"]
+
+                Loader {
+                    required property string modelData
+                    active: Rally.SwipeView.isCurrentItem || Rally.SwipeView.isNextItem
+                            || Rally.SwipeView.isPreviousItem
+                    source: modelData
+                }
+            }
+        }
+    }
+    \endqml
+
+    \sa Flickable, ScrollView
 */
+// Being DragHandler-based rather than Flickable-based is also what makes this safe to nest
+// inside a vertically scrolling Rally.ScrollView. QQuickFlickable decides to steal a drag from
+// |dx| alone (qquickflickable.cpp, handleMoveEvent: it tests deltas.x() against the drag
+// threshold and never compares it to deltas.y()), so a stock horizontal SwipeView hijacks
+// vertical scrolls; and once it has grabbed, an ancestor cannot take the grab back, because
+// QQuickPointerHandler::approveGrabTransition() only lets a handler steal from an item that is
+// its *ancestor*, not from a descendant holding keepTouchGrab. QQuickDragHandler instead
+// refuses to activate at all when the drag is mostly along its disabled axis
+// (handlePointerEventImpl: "If vertical dragging is disallowed, but the user is dragging mostly
+// vertically, then don't activate"), which is the axis arbitration this nesting needs.
+//
 // SwipeViewBase is a plain Item that only adds the attached properties - see swipeviewbase.h.
 Rally.SwipeViewBase {
 
@@ -58,26 +134,38 @@ Rally.SwipeViewBase {
     implicitHeight: currentItem ? currentItem.implicitHeight : 0
 
     /*!
-      The pages of this SwipeView. This is the default property. Each page's width/height is
-      automatically bound to match the SwipeView's own (like stock SwipeView), overriding
-      whatever size the page declared. A Repeater is fine as a direct child (its generated
-      delegates are counted as pages, the Repeater itself isn't) - count/currentItem/page sizing
-      all derive from the internal Row's actual resolved children, not this raw declared list.
+      \qmlproperty list<QtObject> SwipeView::contentChildren
+
+      The pages of this SwipeView. This is the default property, so pages can simply be declared
+      inside the SwipeView. Each page's width and height is automatically bound to match the
+      SwipeView's own (like stock SwipeView), overriding whatever size the page declared. A
+      Repeater is fine as a direct child: its generated delegates are counted as pages, the
+      Repeater itself isn't.
     */
+    // count/currentItem/page sizing all derive from the internal page strip's actual resolved
+    // children, not this raw declared list.
     default property list<QtObject> contentChildren
 
     /*!
-      Number of pages. Derived from pagesRow.children (the Row's actual resolved children, so a
-      Repeater declared as a page source expands into its generated delegates here) with any
-      Repeater instances themselves filtered out - unlike a Positioner's own layout, Item.children
-      is a plain structural list that includes the Repeater object itself alongside its
-      delegates, so it has to be excluded explicitly (verified empirically; Qt Quick source
-      wasn't available to confirm directly).
+      \qmlproperty int SwipeView::count
+      \readonly
+
+      The number of pages. Pages generated by a Repeater are counted, the Repeater itself isn't.
     */
+    // Derived from pageStrip.children (the actual resolved children, so a Repeater declared as a
+    // page source expands into its generated delegates here) with any Repeater instances
+    // themselves filtered out - unlike a Positioner's own layout, Item.children is a plain
+    // structural list that includes the Repeater object itself alongside its delegates, so it has
+    // to be excluded explicitly (verified empirically; Qt Quick source wasn't available to confirm
+    // directly).
     readonly property int count: _pageList.length
 
     /*!
-      The page at currentIndex, or null if currentIndex is out of range (e.g. no pages yet).
+      \qmlproperty Item SwipeView::currentItem
+      \readonly
+
+      The page at \l currentIndex, or \c null if \l currentIndex is out of range (e.g. no pages
+      yet).
     */
     readonly property T.Item currentItem: (currentIndex >= 0 && currentIndex < _pageList.length)
                                           ? _pageList[currentIndex] : null
@@ -89,9 +177,7 @@ Rally.SwipeViewBase {
     // every binding that touched it.
     property list<T.Item> _pageList
 
-    /*!
-      The resolved pages, in order. Cheap - returns the cached list.
-    */
+    // The resolved pages, in order. Cheap - returns the cached list.
     function _pages(): list<T.Item> {
         return control._pageList
     }
@@ -115,14 +201,26 @@ Rally.SwipeViewBase {
       \default 0
 
       The index of the page currently shown. Settable to navigate programmatically (e.g. from a
-      tab bar) - doing so animates to the target page the same way a swipe gesture would.
+      tab bar) - doing so animates to the target page the same way a swipe gesture would. During
+      a swipe it changes as soon as the next page is more than half in view.
     */
     property int currentIndex: 0
 
+
+    /*!
+      \qmlproperty bool SwipeView::interactive
+      \default true
+
+      Whether the user can swipe between the pages. If \c false, the pages can only be changed
+      by setting \l currentIndex.
+    */
     property bool interactive: true
 
     /*!
-      Gap, in px, between adjacent pages.
+      \qmlproperty real SwipeView::spacing
+      \default 0
+
+      Gap, in px, between adjacent pages. It is only visible while swiping.
     */
     property real spacing: 0
 
@@ -138,15 +236,45 @@ Rally.SwipeViewBase {
     property real flingCommitVelocity: 400
 
     /*!
+      \qmlproperty int SwipeView::settleDuration
+      \default 250
+
       Duration, in ms, of the settle animation that snaps to a page after a drag ends or
       currentIndex is set programmatically.
     */
     property int settleDuration: 250
 
+    /*!
+      \qmlproperty bool SwipeView::atFirstPage
+      \readonly
+
+      \c true if the first page is the current page.
+    */
     readonly property bool atFirstPage: currentIndex <= 0
+
+    /*!
+      \qmlproperty bool SwipeView::atLastPage
+      \readonly
+
+      \c true if the last page is the current page.
+    */
     readonly property bool atLastPage: currentIndex >= count - 1
 
+    /*!
+      \qmlproperty bool SwipeView::dragging
+      \readonly
+
+      \c true while the user drags the pages with a finger.
+    */
     readonly property bool dragging: dragHandler.active
+
+    /*!
+      \qmlproperty bool SwipeView::moving
+      \readonly
+
+      \c true while the pages move, either because the user drags them or because they settle
+      on a page after a drag or after \l currentIndex was set.
+    */
     readonly property bool moving: dragging || settleAnim.running
 
     readonly property real _pageStep: width + spacing
