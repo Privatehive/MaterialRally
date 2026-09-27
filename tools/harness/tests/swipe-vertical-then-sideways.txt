@@ -1,0 +1,23 @@
+# Once the ScrollView has taken a vertical drag, moving the finger sideways - even so far that the
+# total movement becomes mostly horizontal - must not hand the gesture to the SwipeView.
+load ../scenes/SwipeInScrollScene.qml
+eval view.currentIndex = 1
+wait 500
+
+drag 200 500 200 350 250
+wait 20
+expect H.find("flickable", scroll).dragging
+
+move 390 350
+wait 20
+move 10 350
+wait 20
+move 390 350
+wait 20
+move 10 350
+wait 20
+eval [H.find("flickable", scroll).dragging, view.dragging, view._rowX]
+expect H.find("flickable", scroll).dragging && !view.dragging && view._rowX === -400
+up
+wait 600
+expect view.currentIndex === 1

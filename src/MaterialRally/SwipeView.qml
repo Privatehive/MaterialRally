@@ -308,6 +308,11 @@ T.Item {
         // See the type docs above.
         xAxis.enabled: true
         yAxis.enabled: false
+        // Once swiping, keep the gesture - see Rally.Flickable's dragHandler.grabPermissions. Without
+        // this, the ScrollView around the pages stole a swipe as soon as the finger's total travel
+        // became mostly vertical.
+        grabPermissions: T.PointerHandler.CanTakeOverFromItems | T.PointerHandler.CanTakeOverFromHandlersOfDifferentType
+                         | T.PointerHandler.ApprovesTakeOverByItems | T.PointerHandler.ApprovesCancellation
 
         // Shared with Rally.Flickable - see FlingPhysics.VelocityTracker for why a smoothed
         // estimate like centroid.velocity is not good enough here, which is what

@@ -617,6 +617,16 @@ T.Item {
         // A negative value is how QQuickPointerHandler spells "use the style hint", so
         // dragThreshold: -1 on the Flickable falls back to Qt.styleHints.startDragDistance.
         dragThreshold: control.dragThreshold
+        // Once dragging, keep the gesture: approve a takeover only by an Item (Controls popups and
+        // drawers rely on that) or a cancellation, never by another pointer handler. Qt's default
+        // approves anything, and its "different type" check compares metaObject class names - every
+        // QML-declared handler with its own properties is a distinct subclass, so e.g. a nested
+        // Rally.SwipeView counted as a different type and stole a vertical drag as soon as the
+        // finger's total travel became mostly horizontal. Matches Android, where a scroll
+        // container that has claimed a gesture keeps it. While not dragging the handler only
+        // holds a passive grab, so this has no say in which handler wins the gesture.
+        grabPermissions: T.PointerHandler.CanTakeOverFromItems | T.PointerHandler.CanTakeOverFromHandlersOfDifferentType
+                         | T.PointerHandler.ApprovesTakeOverByItems | T.PointerHandler.ApprovesCancellation
         xAxis.enabled: control._canFlickX
         yAxis.enabled: control._canFlickY
 

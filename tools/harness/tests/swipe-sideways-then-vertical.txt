@@ -1,0 +1,20 @@
+# The reverse: once the SwipeView has taken a horizontal swipe, moving the finger up and down -
+# even so far that the total movement becomes mostly vertical - must not hand the gesture to the
+# ScrollView around it.
+load ../scenes/SwipeInScrollScene.qml
+eval view.currentIndex = 1
+wait 500
+
+drag 200 400 150 400 250
+wait 20
+expect view.dragging
+
+move 150 750
+wait 20
+move 150 50
+wait 20
+move 150 750
+wait 20
+eval [H.find("flickable", scroll).dragging, view.dragging, H.find("flickable", scroll).contentY]
+expect view.dragging && !H.find("flickable", scroll).dragging && H.find("flickable", scroll).contentY === 0
+up
