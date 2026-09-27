@@ -73,6 +73,12 @@ function splineProgress(t) {
 var VELOCITY_CAPACITY = 32
 var VELOCITY_MASK = 31
 
+// A pointer whose newest sample is older than this when the velocity is computed has stopped, so
+// its velocity is zero. Touch digitisers send no moves while a finger rests, so without this a
+// finger that stopped and then lifted would fling at the speed it had before it stopped. Same
+// value as Android's VelocityTracker (ASSUME_POINTER_STOPPED_TIME).
+var POINTER_STOPPED_MS = 40
+
 function VelocityTracker(windowMs) {
     this.windowMs = (windowMs === undefined) ? 60 : windowMs
     this._x = new Float64Array(VELOCITY_CAPACITY)
@@ -110,16 +116,19 @@ VelocityTracker.prototype.record = function (x, y, now) {
 }
 
 // Velocity is the total displacement over the oldest sample still within windowMs of the newest,
-// or zero if there is no such second sample. At sample rates above ~530 Hz the oldest in-window
-// samples are simply dropped, which slightly narrows the effective window but never yields a
-// wrong velocity.
-VelocityTracker.prototype.compute = function () {
+// or zero if there is no such second sample, or if the newest sample is more than
+// POINTER_STOPPED_MS older than `now` (default Date.now(), i.e. the moment of release). At sample
+// rates above ~530 Hz the oldest in-window samples are simply dropped, which slightly narrows the
+// effective window but never yields a wrong velocity.
+VelocityTracker.prototype.compute = function (now) {
     this.vx = 0
     this.vy = 0
     if (this._count < 2)
         return
     var newest = (this._head - 1) & VELOCITY_MASK
     var tNew = this._t[newest]
+    if (((now === undefined) ? Date.now() : now) - tNew > POINTER_STOPPED_MS)
+        return
     var oldest = newest
     for (var k = 1; k < this._count; ++k) {
         var j = (newest - k) & VELOCITY_MASK
