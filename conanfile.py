@@ -43,7 +43,6 @@ class MaterialRallyConan(ConanFile):
                        "qtappbase/*:qml": True,
                        "qt/*:GUI": True,
                        "qt/*:opengl": "desktop",
-                       "qt/*:vulkan": True,
                        "qt/*:qtbase": True,
                        "qt/*:qtdeclarative": True,
                        "qt/*:qtshadertools": True,
