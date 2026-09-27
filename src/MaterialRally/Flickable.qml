@@ -51,10 +51,9 @@ T.Item {
 
       When true, the finger travel that was consumed getting past \l {DragHandler::}{dragThreshold}
       is replayed as soon as the drag activates, so the content sits under the finger from the very
-      first frame it moves. When false, that travel is discarded (DragHandler's own behaviour:
-      activeTranslation starts at 0,0 on activation) and the content trails the finger by the
-      threshold distance for the whole gesture - which reads as input lag. Mirrors the property of
-      the same name on QtQuick's Flickable, which ScrollView already opts into.
+      first frame it moves. When false, that travel is discarded and the content trails the finger
+      by the threshold distance for the whole gesture - which reads as input lag. Mirrors the
+      property of the same name on QtQuick's Flickable, which ScrollView already opts into.
     */
     property bool synchronousDrag: true
 
@@ -642,30 +641,14 @@ T.Item {
                 control._rawContentX = control.contentX + control._overshootX
                 control._rawContentY = control.contentY + control._overshootY
 
-                if (control.synchronousDrag) {
-                    // DragHandler only activates once the pointer has passed dragThreshold, and it
-                    // starts activeTranslation at (0,0) at that moment - so that travel is thrown
-                    // away and the content ends up permanently lagging the finger by the threshold
-                    // distance for the rest of the gesture. Replay it here, which both removes that
-                    // lag and hands _applyDrag enough displacement to lock the drag axis on the
-                    // first frame instead of accumulating towards a second, additive dead zone.
-                    //
-                    // Subtracting activeTranslation makes this self-correcting: if a future Qt
-                    // stops discarding the travel, the catch-up is zero and nothing changes. Scene
-                    // coordinates are deliberate - centroid.position is relative to the handler's
-                    // parent item, which for a nested Flickable moves with the outer content.
-                    // The ring keeps `lx`/`ly` at 0 (not at `at`) on purpose: the catch-up already
-                    // has `at` subtracted out, so catch-up + (t - 0) telescopes to the full travel
-                    // since press for any value of `at`. The catch-up is deliberately *not* fed to
-                    // the velocity ring - those samples are activeTranslation-relative, and the
-                    // release velocity only ever looks at the last 60 ms anyway.
-                    const c = dragHandler.centroid
-                    const at = dragHandler.activeTranslation
-                    const cx = c.scenePosition.x - c.scenePressPosition.x - at.x
-                    const cy = c.scenePosition.y - c.scenePressPosition.y - at.y
-                    if (cx !== 0 || cy !== 0)
-                        control._applyDrag(cx, cy)
-                }
+                // DragHandler only activates once the pointer has passed dragThreshold. With
+                // synchronousDrag that travel is replayed right here, which both keeps the content
+                // under the finger and hands _applyDrag enough displacement to lock the drag axis on
+                // the first frame instead of accumulating towards a second, additive dead zone.
+                // Without it, the travel so far counts as already applied and is thrown away.
+                dragHandler._appliedX = control.synchronousDrag ? 0 : dragHandler._travelX()
+                dragHandler._appliedY = control.synchronousDrag ? 0 : dragHandler._travelY()
+                dragHandler._applyTravel()
             } else {
                 const tr = dragHandler._tracker
                 tr.compute()
@@ -685,16 +668,39 @@ T.Item {
             }
         }
 
-        onActiveTranslationChanged: {
-            const tr = dragHandler._tracker
-            const t = dragHandler.activeTranslation
-            const tx = t.x
-            const ty = t.y
-            const dx = tx - tr.lastX
-            const dy = ty - tr.lastY
-            tr.record(tx, ty)
-            control._applyDrag(dx, dy)
+        // Travel is measured from the centroid rather than from activeTranslation, whose origin
+        // is version-dependent: Qt 6.11 measures it from the press position but only starts
+        // updating it on the move *after* activation, so replaying the threshold travel and then
+        // applying activeTranslation deltas counted that travel twice. Scene coordinates are
+        // deliberate - centroid.position is relative to the handler's parent item, which for a
+        // nested Flickable moves with the outer content.
+        property real _appliedX: 0
+        property real _appliedY: 0
+
+        function _travelX(): real {
+            const c = dragHandler.centroid
+            return control._canFlickX ? c.scenePosition.x - c.scenePressPosition.x : 0
         }
+
+        function _travelY(): real {
+            const c = dragHandler.centroid
+            return control._canFlickY ? c.scenePosition.y - c.scenePressPosition.y : 0
+        }
+
+        // Applies whatever finger travel since press has not been applied yet.
+        function _applyTravel() {
+            const tx = dragHandler._travelX()
+            const ty = dragHandler._travelY()
+            const dx = tx - dragHandler._appliedX
+            const dy = ty - dragHandler._appliedY
+            dragHandler._appliedX = tx
+            dragHandler._appliedY = ty
+            dragHandler._tracker.record(tx, ty)
+            if (dx !== 0 || dy !== 0)
+                control._applyDrag(dx, dy)
+        }
+
+        onActiveTranslationChanged: dragHandler._applyTravel()
 
         // Stops an in-flight fling as soon as a finger goes down, before the drag threshold is
         // crossed - the "lay your finger on it to catch the scroll" gesture.
