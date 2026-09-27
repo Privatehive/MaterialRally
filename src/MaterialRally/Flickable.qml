@@ -24,6 +24,90 @@ import "./private" as RallyPrivate
     scrolling a different axis than its ancestor simply never grabs drags meant for the ancestor.
     Cooperative hand-off between two same-axis nested Flickables (e.g. a list inside a list) is
     not implemented yet - the inner one simply stops consuming further drag at its own bounds.
+
+    Like \l SwipeView, dragging is a touch (and stylus) gesture: mouse and touchpad users scroll
+    with the wheel, which moves the content in animated steps of \l wheelStepSize.
+
+    Most properties, signals and methods have the same names and meaning as on
+    \l [QML] {QtQuick::Flickable}{QtQuick's Flickable}, but unlike stock the default
+    \l flickableDirection is Flickable.VerticalFlick. The enumeration values are taken from
+    QtQuick's Flickable, e.g. \c {Flickable.HorizontalFlick}.
+
+    \note Rally.Flickable is a plain Item, so the attached \c {ScrollBar.vertical} of QtQuick
+    Controls cannot be used with it. \l ScrollView drives a scroll bar for it and is the easier
+    choice if the content only scrolls vertically.
+
+    \section1 Examples
+
+    A vertically scrolling column. As with QtQuick's Flickable, \l contentHeight has to be set:
+
+    \qml
+    import QtQuick
+    import MaterialRally as Rally
+
+    Rally.Flickable {
+        id: flickable
+        anchors.fill: parent
+        contentHeight: column.implicitHeight
+
+        Column {
+            id: column
+            width: flickable.width
+
+            Repeater {
+                model: 100
+                delegate: Text {
+                    required property int index
+                    text: "Row " + index
+                }
+            }
+        }
+    }
+    \endqml
+
+    A large image that can be panned in both directions, with the content moving past its bounds
+    while dragged:
+
+    \qml
+    Rally.Flickable {
+        anchors.fill: parent
+        contentWidth: image.width
+        contentHeight: image.height
+        flickableDirection: Flickable.HorizontalAndVerticalFlick
+        boundsBehavior: Flickable.DragOverBounds
+        boundsMovement: Flickable.FollowBoundsBehavior
+
+        Image {
+            id: image
+            source: "map.png"
+        }
+    }
+    \endqml
+
+    Reacting to the movement, e.g. to hide a tool bar while the content is scrolled:
+
+    \qml
+    Rally.Flickable {
+        id: flickable
+        // ...
+        onMovementStarted: toolBar.visible = false
+        onMovementEnded: toolBar.visible = flickable.atYBeginning
+    }
+    \endqml
+
+    Scrolling to the top programmatically:
+
+    \qml
+    Rally.Button {
+        text: qsTr("Top")
+        onClicked: {
+            flickable.cancelFlick()
+            flickable.contentY = 0
+        }
+    }
+    \endqml
+
+    \sa ScrollView, SwipeView
 */
 T.Item {
 
@@ -32,7 +116,10 @@ T.Item {
     clip: true
 
     /*!
-      The content children of this Flickable. This is the default property.
+      \qmlproperty list<QtObject> Flickable::flickableChildren
+
+      The content children of this Flickable. This is the default property, so the content can
+      simply be declared inside the Flickable. The children are placed in \l contentItem.
     */
     default
     property
@@ -49,6 +136,18 @@ T.Item {
     */
     property real contentX: 0
     property real contentY: 0
+
+    /*!
+      \qmlproperty real Flickable::contentWidth
+      \qmlproperty real Flickable::contentHeight
+
+      The size of the content, which determines how far it can be scrolled. They default to the
+      size of the Flickable, i.e. nothing to scroll. As with QtQuick's Flickable, they are not
+      derived from the children - bind them, e.g. to the implicit size of the content.
+
+      After shrinking them, call \l returnToBounds() if the content should move back inside its
+      bounds.
+    */
     property real contentWidth: width
     property real contentHeight: height
 
@@ -60,13 +159,20 @@ T.Item {
     */
     readonly property T.Item contentItem: flickableContent
 
+    /*!
+      \qmlproperty bool Flickable::interactive
+      \default true
+
+      Whether the user can drag, flick and wheel-scroll the content. If \c false, it can only be
+      moved by setting \l contentX / \l contentY or calling \l flick().
+    */
     property bool interactive: true
 
     /*!
       \qmlproperty bool Flickable::synchronousDrag
       \default true
 
-      When true, the finger travel that was consumed getting past \l {DragHandler::}{dragThreshold}
+      When true, the finger travel that was consumed getting past \l dragThreshold
       is replayed as soon as the drag activates, so the content sits under the finger from the very
       first frame it moves. When false, that travel is discarded and the content trails the finger
       by the threshold distance for the whole gesture - which reads as input lag. Mirrors the
@@ -110,6 +216,9 @@ T.Item {
     property int flickableDirection: T.Flickable.VerticalFlick
 
     /*!
+      \qmlproperty real Flickable::maximumFlickVelocity
+      \default 9000
+
       Velocity, in px/s, is clamped to this before computing the fling - matches Android's
       ViewConfiguration.getScaledMaximumFlingVelocity() acting as a safety cap.
     */
@@ -117,7 +226,7 @@ T.Item {
 
     /*!
       \qmlproperty real Flickable::flingFriction
-      \default 0.0075
+      \default 0.0055
 
       Together with \l flingPhysicalCoefficient this drives the fling's exponential spline
       deceleration (see android.widget.OverScroller.SplineOverScroller) - higher friction means a
@@ -147,6 +256,9 @@ T.Item {
     property real flingPhysicalCoefficient: 9.80665 * 39.37 * 160 * 0.84
 
     /*!
+      \qmlproperty real Flickable::wheelStepSize
+      \default 60
+
       Amount, in px, scrolled per classic (non-high-resolution) mouse wheel notch.
     */
     property real wheelStepSize: 60
@@ -180,6 +292,9 @@ T.Item {
     property int boundsMovement: T.Flickable.StopAtBounds
 
     /*!
+      \qmlproperty bool Flickable::overscrollGlow
+      \default true
+
       Set false to suppress the four EdgeGlow indicators - e.g. when the owner draws its own
       overscroll feedback from \l verticalOvershoot and would otherwise get both.
     */
@@ -213,27 +328,72 @@ T.Item {
     readonly property real horizontalVelocity: control._velocityX
     readonly property real verticalVelocity: control._velocityY
 
+    /*!
+      \qmlproperty bool Flickable::rebounding
+      \qmlproperty bool Flickable::reboundingHorizontally
+      \qmlproperty bool Flickable::reboundingVertically
+
+      \c true while the content animates back inside its bounds after it was dragged past them,
+      or after \l returnToBounds() was called. Treat them as read-only.
+    */
     // Not readonly: the rebound animations below drive these. Deliberately not named with a
     // leading underscore - QML would then expect on_ReboundingChanged handlers.
     property bool reboundingHorizontally: false
     property bool reboundingVertically: false
     readonly property bool rebounding: reboundingHorizontally || reboundingVertically
 
+    /*!
+      \qmlproperty bool Flickable::atXBeginning
+      \qmlproperty bool Flickable::atXEnd
+      \qmlproperty bool Flickable::atYBeginning
+      \qmlproperty bool Flickable::atYEnd
+      \readonly
+
+      \c true if the content is at its beginning resp. end along the given axis, e.g. to show a
+      "scroll to top" button only when needed.
+    */
     readonly property bool atXBeginning: contentX <= 0
     readonly property bool atXEnd: contentX >= control._maxContentX
     readonly property bool atYBeginning: contentY <= 0
     readonly property bool atYEnd: contentY >= control._maxContentY
 
+    /*!
+      \qmlproperty bool Flickable::dragging
+      \qmlproperty bool Flickable::draggingHorizontally
+      \qmlproperty bool Flickable::draggingVertically
+      \readonly
+
+      \c true while the user drags the content with a finger, along any axis resp. along the
+      given one.
+    */
     readonly property bool draggingHorizontally: dragHandler.active && control._dragAxis !== "y"
         && control._scrollableX
     readonly property bool draggingVertically: dragHandler.active && control._dragAxis !== "x"
         && control._scrollableY
     readonly property bool dragging: draggingHorizontally || draggingVertically
 
+    /*!
+      \qmlproperty bool Flickable::flicking
+      \qmlproperty bool Flickable::flickingHorizontally
+      \qmlproperty bool Flickable::flickingVertically
+      \readonly
+
+      \c true while the content keeps moving on its own after the user released a flick, or after
+      \l flick() was called. Only one axis flings at a time.
+    */
     readonly property bool flickingHorizontally: flickTicker.flingAxis === T.Flickable.HorizontalFlick
     readonly property bool flickingVertically: flickTicker.flingAxis === T.Flickable.VerticalFlick
     readonly property bool flicking: flickingHorizontally || flickingVertically
 
+    /*!
+      \qmlproperty bool Flickable::moving
+      \qmlproperty bool Flickable::movingHorizontally
+      \qmlproperty bool Flickable::movingVertically
+      \readonly
+
+      \c true while the content moves because of the user - it is dragged, flicked or rebounds
+      after an overscroll. Wheel scrolling does not count as moving.
+    */
     // The rebound term matters: stock's moving stays true through the 400 ms settle back from an
     // overshoot (it only ends at timelineCompleted -> movementEnding()), even though flicking is
     // false there - fixup() never emits flickingStarted().
@@ -243,18 +403,49 @@ T.Item {
         || reboundingVertically
     readonly property bool moving: movingHorizontally || movingVertically
 
-        signal
-    movementStarted
-        signal
-    movementEnded
-        signal
-    dragStarted
-        signal
-    dragEnded
-        signal
-    flickStarted
-        signal
-    flickEnded
+    /*!
+      \qmlsignal Flickable::movementStarted()
+
+      This signal is emitted when \l moving becomes \c true.
+    */
+    signal movementStarted()
+
+    /*!
+      \qmlsignal Flickable::movementEnded()
+
+      This signal is emitted when \l moving becomes \c false, i.e. the content has come to rest
+      after a drag, a flick and a possible rebound.
+    */
+    signal movementEnded()
+
+    /*!
+      \qmlsignal Flickable::dragStarted()
+
+      This signal is emitted when the user starts dragging the content.
+    */
+    signal dragStarted()
+
+    /*!
+      \qmlsignal Flickable::dragEnded()
+
+      This signal is emitted when the user releases the content after dragging it. A flick may
+      follow.
+    */
+    signal dragEnded()
+
+    /*!
+      \qmlsignal Flickable::flickStarted()
+
+      This signal is emitted when the content starts flinging on its own.
+    */
+    signal flickStarted()
+
+    /*!
+      \qmlsignal Flickable::flickEnded()
+
+      This signal is emitted when a fling has come to rest or was stopped.
+    */
+    signal flickEnded()
 
     property string _dragAxis: ""
     property real _axisAccumX: 0
@@ -732,6 +923,8 @@ T.Item {
     }
 
     /*!
+      \qmlmethod void Flickable::cancelFlick()
+
       Stops any running fling or overscroll rebound. Writing contentX/contentY from outside already
       stops them along that axis.
     */
@@ -741,6 +934,8 @@ T.Item {
     }
 
     /*!
+      \qmlmethod void Flickable::flick(real xVelocity, real yVelocity)
+
       Flicks the content with \a xVelocity and \a yVelocity, in px/s, as if a finger had released
       at that speed - the same sign as a finger's movement, so a positive yVelocity moves the
       content down, towards its beginning, as on QtQuick.Flickable. Like a touch fling, only one
@@ -753,6 +948,8 @@ T.Item {
     }
 
     /*!
+      \qmlmethod void Flickable::returnToBounds()
+
       Moves the content back inside its bounds, with the same animation as the rebound after a
       drag past a bound. Call it after positioning the content from outside, or after shrinking
       contentWidth/contentHeight, since neither is corrected on its own - as on QtQuick.Flickable.

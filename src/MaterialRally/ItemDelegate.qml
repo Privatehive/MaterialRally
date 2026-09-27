@@ -4,10 +4,71 @@ import QtQuick.Controls.Material as T
 import QtQuick.Controls.Material.impl as T
 import MaterialRally
 
+
+/*!
+    \qmltype ItemDelegate
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits QtQuick.Controls::ItemDelegate
+
+    \brief A list item in the Material Rally style.
+
+    Rally.ItemDelegate is an \l [QML] {QtQuick.Controls::ItemDelegate}{ItemDelegate} meant to be
+    used as the delegate of a \l [QML] {QtQuick::ListView}{ListView}. It spans the full width of the view, draws a thin
+    separator line below itself and can show a chevron on its right side to indicate that clicking
+    it navigates somewhere.
+
+    When clicked, the delegate calls the function \c clicked(index) of the ListView it belongs
+    to, if the view declares such a function. This way the click handling can be implemented once
+    on the view instead of in every delegate.
+
+    \section1 Example
+
+    \qml
+    import QtQuick
+    import MaterialRally as Rally
+
+    ListView {
+        id: accountList
+
+        model: ["Checking", "Home Savings", "Car Savings"]
+
+        // called by Rally.ItemDelegate
+        function clicked(index) {
+            console.log("Opening account", model[index])
+        }
+
+        delegate: Rally.ItemDelegate {
+            required property string modelData
+            text: modelData
+            showChevron: true
+        }
+    }
+    \endqml
+
+    Of course the stock \c onClicked handler can be used as well:
+
+    \code
+    delegate: Rally.ItemDelegate {
+        required property int index
+        text: qsTr("Item %1").arg(index)
+        highlighted: ListView.isCurrentItem
+        onClicked: ListView.view.currentIndex = index
+    }
+    \endcode
+*/
 T.ItemDelegate {
 
     id: control
 
+
+    /*!
+      \qmlproperty bool ItemDelegate::showChevron
+      \default false
+
+      If \c true, a chevron (right arrow) icon is shown on the right side of the delegate, e.g. to
+      indicate that clicking the item opens a detail page.
+    */
     property bool showChevron: false
 
     rightPadding: showChevron ? 10 + chevronIcon.width : padding

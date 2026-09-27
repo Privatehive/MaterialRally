@@ -1,0 +1,37 @@
+// The attached properties of MaterialRally SwipeView (see swipeviewbase.h). They are documented
+// here because they are not declared in SwipeView.qml.
+
+/*!
+  \qmlattachedproperty int MaterialRally::SwipeView::index
+  \readonly
+
+  Holds the index of each page in the SwipeView, or -1 on items that are not a page.
+*/
+
+/*!
+  \qmlattachedproperty bool MaterialRally::SwipeView::isCurrentItem
+  \readonly
+
+  \c true if this page is the current page.
+*/
+
+/*!
+  \qmlattachedproperty bool MaterialRally::SwipeView::isNextItem
+  \readonly
+
+  \c true if this page is the page right after the current page.
+*/
+
+/*!
+  \qmlattachedproperty bool MaterialRally::SwipeView::isPreviousItem
+  \readonly
+
+  \c true if this page is the page right before the current page.
+*/
+
+/*!
+  \qmlattachedproperty SwipeView MaterialRally::SwipeView::view
+  \readonly
+
+  Holds the SwipeView a page belongs to, or \c null on items that are not a page.
+*/

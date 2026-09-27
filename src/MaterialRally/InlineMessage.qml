@@ -5,16 +5,120 @@ import QtQuick.Controls.Material as T
 import QtQml.Models
 import MaterialRally
 
+
+/*!
+    \qmltype InlineMessage
+    \inqmlmodule MaterialRally
+    \ingroup qmlclass
+    \inherits MaterialRally::GroupBox
+
+    \brief A group box that collects messages inline in the page.
+
+    InlineMessage is a Rally \l GroupBox that lists messages pushed with \l pushMessage(). Unlike
+    the transient notifications of a \l SnackBar, the messages stay until the user removes them
+    (with the button next to each message) or \l clear() is called - use it e.g. for validation or
+    synchronization errors that belong to a certain part of a page.
+
+    The header of the group box always reflects the newest message: its title is shown as the
+    group box title, and an icon and color matching its severity is shown next to it:
+
+    \table
+    \header \li Severity \li Icon color
+    \row \li \c "error" \li red
+    \row \li \c "warning" \li amber
+    \row \li \c "info" \li blue-grey
+    \endtable
+
+    Messages are laid out in a grid with one column per 400 px of width, the newest message
+    first. While \l fold is \c true only the first row of messages is shown. As soon as there are
+    more messages than fit into one row, a \e {See all (n)} / \e {See less} action in the header
+    toggles \l fold. If there are no messages, "No messages" is shown.
+
+    \section1 Example
+
+    \qml
+    import QtQuick
+    import QtQuick.Layouts
+    import MaterialRally as Rally
+
+    ColumnLayout {
+
+        Rally.InlineMessage {
+            id: syncMessages
+            Layout.fillWidth: true
+            maxCount: 20
+        }
+
+        Connections {
+            target: backend
+            function onSyncFailed(reason) {
+                syncMessages.pushMessage(reason, "error", qsTr("Synchronization failed"))
+            }
+            function onSyncFinished() {
+                syncMessages.clear()
+                syncMessages.pushMessage(qsTr("All accounts are up to date."), "info",
+                                         qsTr("Synchronized"))
+            }
+        }
+    }
+    \endqml
+
+    \sa SnackBar, GroupBox
+*/
 GroupBox {
 
     id: control
 
+
+    /*!
+      \qmlproperty bool InlineMessage::fold
+      \default true
+
+      If \c true, only the first row of messages is shown. If \c false, all messages are shown.
+      The user toggles this property with the \e {See all} / \e {See less} action in the header.
+    */
     property bool fold: true
+
+    /*! \internal Not used at the moment. */
     property string text: ""
+
+
+    /*!
+      \qmlproperty int InlineMessage::count
+      \readonly
+
+      The number of messages, including the ones hidden because the InlineMessage is folded.
+    */
     readonly property alias count: messageModel.count
+
+
+    /*!
+      \qmlproperty int InlineMessage::maxCount
+      \default 1000
+
+      The maximum number of messages the InlineMessage holds. If a message is pushed while
+      \c maxCount messages are shown, the oldest message is removed.
+    */
     property int maxCount: 1000
 
-    // severity one of "error", "warning", "info"
+
+    /*!
+      \qmlmethod void InlineMessage::pushMessage(string message, string severity, string title)
+
+      Adds a new message in front of all other messages.
+
+      \a message is the text of the message.
+
+      \a severity determines the icon and its color in the header. Allowed values are
+      \c "error", \c "warning" and \c "info". Defaults to \c "info".
+
+      \a title is shown as the title of the group box while this is the newest message.
+      Defaults to an empty string.
+
+      \code
+      inlineMessage.pushMessage(qsTr("The IBAN is invalid."), "warning", qsTr("Transfer"))
+      \endcode
+    */
     function pushMessage(message, severity, title) {
 
         if (!message) {
@@ -43,11 +147,18 @@ GroupBox {
         }
     }
 
+
+    /*!
+      \qmlmethod void InlineMessage::clear()
+
+      Removes all messages.
+    */
     function clear() {
 
         messageModel.clear()
     }
 
+    /*! \internal */
     readonly property BusyAction defaultAction: BusyAction {
 
         //visible: messageModel.count > grid.columns

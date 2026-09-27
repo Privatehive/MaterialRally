@@ -6,9 +6,9 @@
 
     You can import this module using the following statement:
 
-    \qml
+    \code
     import MaterialRally as Rally
-    \endqml
+    \endcode
 
     \note
     You should import the Material Rally QML module into its own namespace (e.g. Rally) because it uses the same names as the official Qt Quick Controls.

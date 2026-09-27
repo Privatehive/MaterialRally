@@ -8,13 +8,50 @@ import QtQuick.Controls.Material.impl as T
     \qmltype Button
     \inqmlmodule MaterialRally
     \ingroup qmlclass
-    \inherits T.Button
+    \inherits QtQuick.Controls::Button
 
-    \brief A button.
+    \brief A push-button in the Material Rally style.
 
-    This is a Material Rally styled button.
+    Rally.Button is a \l [QML] {QtQuick.Controls::Button}{Button} with the look of the Rally
+    Material study: an upper case, wide-spaced label, a slightly smaller icon and a flat
+    rectangular background with a ripple effect. All properties of the stock Button (\c text,
+    \c icon, \c flat, \c highlighted, \c checkable, \c onClicked, ...) are available.
 
     \image button.png "Button"
+
+    \section1 Examples
+
+    A simple button with a text and an icon:
+
+    \qml
+    import QtQuick
+    import MaterialRally as Rally
+
+    Rally.Button {
+        text: qsTr("Save")
+        icon.source: "qrc:/icons/save.svg"
+        onClicked: document.save()
+    }
+    \endqml
+
+    A highlighted button uses the Material accent color, a flat button has no background until it
+    is hovered or pressed:
+
+    \qml
+    Row {
+        spacing: 10
+
+        Rally.Button {
+            text: qsTr("Accept")
+            highlighted: true
+        }
+
+        Rally.Button {
+            text: qsTr("Cancel")
+            flat: true
+        }
+    }
+    \endqml
 */
 T.Button {
 

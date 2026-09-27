@@ -12,11 +12,62 @@ import MaterialRally as Rally
     \ingroup qmlclass
     \inherits Control
 
-    \brief Displays snack-bar notifikations.
+    \brief Displays short, transient notifications.
 
-    Displays multiple snack-bar notifications on top of each other. For each notification, you can individually specify which text & icon, is displayed, with what severity, and for how long.
+    SnackBar shows notifications pushed with \l pushMessage() as a stack of cards. Each
+    notification can have a title, a message, an icon and a severity that determines its color
+    (\c "info": blue-grey, \c "warning": amber, \c "error": red), and disappears on its own after
+    a timeout.
+
+    The user can interact with a notification:
+    \list
+    \li While the mouse hovers over it, its timeout is paused.
+    \li Tapping it restarts its timeout.
+    \li The close button removes it immediately.
+    \endlist
+
+    Place the SnackBar on top of the application content, e.g. at the bottom of the window, and
+    give it a width (the implicit width is 400 px). Its height grows with the number of
+    notifications.
 
     \image snack-bar.png "SnackBar"
+
+    \section1 Example
+
+    \qml
+    import QtQuick
+    import MaterialRally as Rally
+
+    Rally.RallyApplicationWindow {
+
+        Rally.ScrollView {
+            anchors.fill: parent
+            // ...
+        }
+
+        Rally.SnackBar {
+            id: snackBar
+            width: Math.min(parent.width - 20, 400)
+            anchors.bottom: parent.bottom
+            anchors.bottomMargin: 10
+            anchors.horizontalCenter: parent.horizontalCenter
+            // add new notifications at the bottom, next to the window border
+            inverted: true
+        }
+
+        Connections {
+            target: backend
+            function onTransferDone() {
+                snackBar.pushMessage(qsTr("The money was transferred."))
+            }
+            function onTransferFailed(reason) {
+                snackBar.pushMessage(reason, "error", 10000, qsTr("Transfer failed"))
+            }
+        }
+    }
+    \endqml
+
+    \sa InlineMessage
 */
 T.Control {
 
@@ -27,7 +78,8 @@ T.Control {
       \qmlproperty int SnackBar::maxCount
       \default 10
 
-      This is the maximum number of snack-bar notifications the snack-bar can hold. If the maxCount is reached and an additional snack-bar notification is pushed the oldest notification will be removed immediately.
+      The maximum number of notifications the snack bar shows at once. If a notification is
+      pushed while \c maxCount notifications are shown, the oldest one is removed immediately.
     */
     property int maxCount: 10
 
@@ -36,7 +88,9 @@ T.Control {
       \qmlproperty bool SnackBar::inverted
       \default false
 
-      By default, new snack-bar notifications are added to the top and old messages are removed from the bottom. By setting inverted to true new snack-bar notifications are added to the bottom and old messages are removed from the top.
+      By default, new notifications are added at the top and the stack grows downwards. If
+      \c inverted is \c true, new notifications are added at the bottom and the stack grows
+      upwards - use this if the snack bar is anchored to the bottom of the window.
     */
     property bool inverted: false
 
@@ -44,17 +98,28 @@ T.Control {
     /*!
       \qmlmethod void SnackBar::pushMessage(string message, string severity, int timeout, string title, string iconName)
 
-      Push a new snack-bar notification. This function accepts five parameters:
+      Shows a new notification.
 
-      \a message: The message string to display
+      \a message is the text of the notification.
 
-      \a severity: Determines the background color. Allowed values are: "info", "warning", "error". Defaults to "info"
+      \a severity determines the background color. Allowed values are \c "info",
+      \c "warning" and \c "error". Defaults to \c "info".
 
-      \a timeout: How long the snack-bar notification is displayed in milliseconds. Defaults to 5000
+      \a timeout is the time, in milliseconds, after which the notification disappears.
+      Defaults to 5000.
 
-      \a title: Optionally give the notification a title. Defaults to null
+      \a title is an optional title, shown in bold above the message.
 
-      \a iconName: Optionally give the notification an icon. Defaults to null
+      \a iconName is the optional name of an icon from the current icon theme, shown on the
+      left side of the notification.
+
+      All parameters but \a message are optional:
+
+      \code
+      snackBar.pushMessage(qsTr("Saved"))
+      snackBar.pushMessage(qsTr("The connection was lost."), "warning")
+      snackBar.pushMessage(qsTr("Could not save the file."), "error", 10000, qsTr("Error"), "alert-outline")
+      \endcode
     */
     function pushMessage(message, severity, timeout, title, iconName) {
 
@@ -98,7 +163,7 @@ T.Control {
     /*!
       \qmlmethod void SnackBar::clear()
 
-      Remove all snack-bar notifications
+      Removes all notifications immediately.
     */
     function clear() {
 

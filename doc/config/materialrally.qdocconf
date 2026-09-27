@@ -1,16 +1,24 @@
 include($QT_INSTALL_DOCS/global/qt-html-templates-offline.qdocconf)
 
-project     = Test
-description = Sample QDoc project
+project     = MaterialRally
+description = Material Rally Reference Documentation
 version = 1.0.0
-navigation.hometitle = "Material Rally version"
+navigation.hometitle = "Material Rally"
 buildversion = "Material Rally Reference Documentation"
+
+# Resolve links and \inherits to Qt's own types (e.g. Item, Control, Button) if the Qt
+# documentation index files are installed.
+depends += qtcore qtgui qtqml qtqmlmodels qtquick qtquickcontrols qtquickdialogs qtquicklayouts
 
 headers.fileextensions  = "*.h *.hpp"
 sources.fileextensions  = "*.cpp *.qml *.qdoc"
 
-headerdirs += ../../
-sourcedirs += ../../
+# Only scan the sources and the doc folder - scanning the repository root also picks up copies of
+# the QML files in build and install folders, which then override each other's documentation.
+headerdirs += ../../src
+sourcedirs += ../../src ..
+excludedirs += ../../src/Gallery
+excludefiles += ../../src/main.cpp
 imagedirs += ../images
 
 HTML.footer =

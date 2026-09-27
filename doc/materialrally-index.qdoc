@@ -4,9 +4,98 @@
     \title Material Rally
     \brief Provides a qml Module Material Rally.
 
-    Material Rally
+    Material Rally is a QML module with controls in the style of the
+    \l {https://m2.material.io/design/material-studies/rally.html}{Rally Material study}. It builds
+    on the Material style of Qt Quick Controls and adds controls that are made for touch and mouse
+    input alike, e.g. a \l ScrollView that switches between swipe scrolling and an interactive
+    scroll bar, depending on the input device used.
 
     \section1 Overview
+
+    \table
+    \header \li Category \li Types
+    \row \li Application root
+         \li \l RallyApplicationWindow, \l RallyRootPage
+    \row \li Buttons and input
+         \li \l Button, \l TextField, \l PasswordTextField, \l TextArea
+    \row \li Containers and structure
+         \li \l GroupBox, \l CollapsibleControl, \l Divider, \l ItemDelegate
+    \row \li Scrolling and paging
+         \li \l ScrollView, \l Flickable, \l SwipeView, \l ScrollablePage
+    \row \li Dialogs and notifications
+         \li \l Dialog, \l InfoDialog, \l SnackBar, \l InlineMessage
+    \row \li Helpers
+         \li \l BusyAction, \l Helper
+    \endtable
+
+    \section1 Getting Started
+
+    Link your application against the \c MaterialRally CMake target and import the QML module
+    into its own namespace, so the controls do not clash with the stock Qt Quick Controls of the
+    same name:
+
+    \code
+    target_link_libraries(MyApp PRIVATE MaterialRally)
+    \endcode
+
+    Use \l RallyApplicationWindow (or \l RallyRootPage if the application uses QQuickView) as
+    the root item. Several controls - e.g. \l Dialog, \l InfoDialog and the \l Helper functions -
+    depend on it.
+
+    \qml
+    import QtQuick
+    import QtQuick.Controls
+    import QtQuick.Layouts
+    import MaterialRally as Rally
+
+    Rally.RallyApplicationWindow {
+        width: 800
+        height: 600
+        title: qsTr("My Rally App")
+
+        Rally.ScrollView {
+            anchors.fill: parent
+
+            ColumnLayout {
+                width: parent.width
+
+                Rally.GroupBox {
+                    Layout.fillWidth: true
+                    title: qsTr("Login")
+                    infoText: qsTr("Use the credentials you got by mail.")
+
+                    ColumnLayout {
+                        anchors.fill: parent
+
+                        Rally.TextField {
+                            id: user
+                            Layout.fillWidth: true
+                            placeholderText: qsTr("User name")
+                        }
+
+                        Rally.PasswordTextField {
+                            Layout.fillWidth: true
+                            placeholderText: qsTr("Password")
+                        }
+
+                        Rally.Button {
+                            text: qsTr("Login")
+                            highlighted: true
+                            onClicked: snackBar.pushMessage(qsTr("Welcome %1").arg(user.text))
+                        }
+                    }
+                }
+            }
+        }
+
+        Rally.SnackBar {
+            id: snackBar
+            anchors.bottom: parent.bottom
+            anchors.horizontalCenter: parent.horizontalCenter
+            inverted: true
+        }
+    }
+    \endqml
 
     \section1 Reference
     \list
