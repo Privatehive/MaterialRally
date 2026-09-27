@@ -1,0 +1,14 @@
+# synchronousDrag: false - the travel spent crossing the touch slop is discarded, so the content
+# trails the finger by it for the rest of the gesture.
+load ../scenes/FlickableScene.qml
+eval flick.synchronousDrag = false
+
+down 200 600
+move 200 591
+wait 20
+expect flick.dragging && flick.contentY === 0
+
+move 200 350
+wait 20
+expect flick.contentY === 241
+up

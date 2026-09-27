@@ -1,0 +1,9 @@
+# Releasing after the finger has come to rest must not fling.
+load ../scenes/FlickableScene.qml
+
+drag 200 600 200 400 400
+wait 200
+up
+wait 50
+expect !flick.flicking
+expect Math.abs(flick.contentY - 200) < 1

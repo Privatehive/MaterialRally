@@ -1,0 +1,9 @@
+# Releasing a short drag after the finger has come to rest snaps back, however fast the drag
+# itself was.
+load ../scenes/SwipeInScrollScene.qml
+
+drag 300 400 200 400 60
+wait 200
+up
+wait 600
+expect view.currentIndex === 0

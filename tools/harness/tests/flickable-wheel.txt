@@ -1,0 +1,7 @@
+# Mouse wheel scrolls (mouse and touchpad scroll by wheel only, never by dragging).
+load ../scenes/FlickableScene.qml
+
+wheel 200 400 -120
+wait 500
+eval flick.contentY
+expect flick.contentY > 0

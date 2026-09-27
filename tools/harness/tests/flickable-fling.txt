@@ -1,0 +1,8 @@
+# A fast release keeps scrolling past the finger travel and then comes to rest.
+load ../scenes/FlickableScene.qml
+
+swipe 200 700 200 300 120
+expect flick.flicking
+wait 4000
+eval flick.contentY
+expect !flick.flicking && flick.contentY > 800

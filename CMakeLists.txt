@@ -8,3 +8,8 @@ project(${PROJECT_SETUP_INFO})
 qt_app_setup()
 
 add_subdirectory(src)
+
+set(FEATURE_TEST_HARNESS OFF CACHE BOOL "Build RallyHarness, an offscreen touch-driving test harness")
+if (FEATURE_TEST_HARNESS)
+    add_subdirectory(tools/harness)
+endif ()

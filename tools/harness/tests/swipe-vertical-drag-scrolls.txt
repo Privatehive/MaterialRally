@@ -1,0 +1,9 @@
+# A mostly vertical drag with horizontal wobble scrolls the outer ScrollView and leaves the page
+# alone.
+load ../scenes/SwipeInScrollScene.qml
+
+swipe 200 600 215 300 300
+wait 1500
+eval [view.currentIndex, H.find("flickable", scroll).contentY]
+expect view.currentIndex === 0
+expect H.find("flickable", scroll).contentY >= 300
