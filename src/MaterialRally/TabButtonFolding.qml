@@ -42,6 +42,11 @@ T.Button {
         flat: true
         opacity: control.checked ? 1 : 0.6
         checked: control.checked
+        // What gives the selected tab's icon the accent color: Material's RoundButton picks its
+        // icon color from `highlighted` alone and ignores `checked` (unlike Material's Button).
+        // A flat RoundButton's background stays transparent either way, since it sets its own
+        // Material.background to "transparent".
+        highlighted: control.checked
         display: T.AbstractButton.IconOnly
         icon: control.icon
         checkable: !button.checked
