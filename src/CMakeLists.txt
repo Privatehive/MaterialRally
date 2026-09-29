@@ -118,6 +118,8 @@ if (FEATURE_GALLERY_APP)
 
     qt_add_executable(RallyGallery main.cpp)
 
+    set_source_files_properties("${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery.svg" PROPERTIES QT_RESOURCE_ALIAS Gallery/RallyGallery.svg)
+
     qt_add_qml_module(RallyGallery
             URI Gallery
 
@@ -128,6 +130,9 @@ if (FEATURE_GALLERY_APP)
             Gallery/TestDialog.qml
             Gallery/DocItem.qml
             Gallery/FlickableGallery.qml
+
+            RESOURCES
+            "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery.svg"
     )
 
     target_link_libraries(RallyGallery

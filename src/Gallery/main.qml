@@ -82,6 +82,47 @@ Rally.RallyApplicationWindow {
         }
     }
 
+    // Desktop layout: replaces the header menu while the window is wide
+    navigationRail: Item {
+
+        implicitWidth: 200
+
+        ColumnLayout {
+
+            anchors.top: parent.top
+            anchors.topMargin: 48
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 72
+
+            Image {
+                Layout.alignment: Qt.AlignHCenter
+                // Absolute: with QML hot reloading main.qml is loaded from disk, where the logo does not live
+                source: "qrc:/qt/qml/Gallery/Gallery/RallyGallery.svg"
+                sourceSize.width: 64
+                sourceSize.height: 64
+            }
+
+            Rally.TabBarFolding {
+
+                Layout.alignment: Qt.AlignHCenter
+                orientation: Qt.Vertical
+
+                onIndexSelected: index => view.currentIndex = index
+                currentIndex: view.currentIndex
+
+                Repeater {
+                    model: mainMenuModel
+                    Rally.TabButtonFolding {
+
+                        checked: defaultChecked
+                        icon.name: iconName
+                        text: title
+                    }
+                }
+            }
+        }
+    }
+
     Rally.ScrollView {
 
         anchors.fill: parent
