@@ -14,12 +14,22 @@ T.Button {
     font.letterSpacing: 2.8
     icon.width: 22
     icon.height: 22
-    implicitHeight: button.implicitHeight
-    implicitWidth: Math.max(button.implicitWidth + (button.checked ? label.implicitWidth : 0),
-                            button.checked ? expandWidth : button.implicitWidth)
+    // Horizontal: the label folds out to the right of the icon and the button grows in width.
+    // Vertical: the label folds out below the icon and the button grows in height - all buttons
+    // share the widest label's width so a navigation rail does not jump.
+    implicitHeight: control.vertical ? button.implicitHeight + (button.checked ? label.implicitHeight : 0)
+                                     : button.implicitHeight
+    implicitWidth: control.vertical ? Math.max(button.implicitWidth, expandWidth)
+                                    : Math.max(button.implicitWidth + (button.checked ? label.implicitWidth : 0),
+                                               button.checked ? expandWidth : button.implicitWidth)
+
+    // Set by TabBarFolding
+    property int orientation: Qt.Horizontal
+    readonly property bool vertical: control.orientation === Qt.Vertical
 
     property real expandWidth: 0
-    property real proposedWidth: button.implicitWidth + label.implicitWidth
+    property real proposedWidth: control.vertical ? Math.max(button.implicitWidth, label.implicitWidth)
+                                                  : button.implicitWidth + label.implicitWidth
 
     background: Rectangle {
         color: "transparent"
@@ -39,6 +49,7 @@ T.Button {
 
         id: button
 
+        x: control.vertical ? (control.width - button.width) / 2 : 0
         flat: true
         opacity: control.checked ? 1 : 0.6
         checked: control.checked
@@ -70,8 +81,10 @@ T.Button {
         id: label
         text: control.text
         font: control.font
-        anchors.verticalCenter: button.verticalCenter
-        anchors.left: button.right
+        anchors.verticalCenter: control.vertical ? undefined : button.verticalCenter
+        anchors.left: control.vertical ? undefined : button.right
+        anchors.top: control.vertical ? button.bottom : undefined
+        anchors.horizontalCenter: control.vertical ? button.horizontalCenter : undefined
 
         state: button.checked ? "CHECKED" : "UNCHECKED"
         states: [
@@ -128,6 +141,13 @@ T.Button {
     }
 
     Behavior on implicitWidth {
+        SmoothedAnimation {
+            duration: 200
+            velocity: -1
+        }
+    }
+
+    Behavior on implicitHeight {
         SmoothedAnimation {
             duration: 200
             velocity: -1

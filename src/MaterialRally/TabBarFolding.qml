@@ -2,7 +2,7 @@ import QtQuick
 import QtQuick.Controls
 import MaterialRally as Rally
 
-Row {
+Grid {
 
     id: control
     leftPadding: 0
@@ -10,6 +10,13 @@ Row {
     padding: 0
 
     property int currentIndex: 0
+
+    // Qt.Horizontal lays the buttons out in a row (toolbar), Qt.Vertical in a column (navigation rail)
+    property int orientation: Qt.Horizontal
+
+    columns: control.orientation === Qt.Horizontal ? -1 : 1
+    rows: control.orientation === Qt.Horizontal ? 1 : -1
+    rowSpacing: 48
 
     onCurrentIndexChanged: {
         const button = group.buttons[control.currentIndex]
@@ -30,7 +37,11 @@ Row {
     // This signal is emitted when a TabButton is interactively toggled
     signal indexSelected(int index)
 
-    spacing: {
+    columnSpacing: {
+
+        if (control.orientation !== Qt.Horizontal) {
+            return 0
+        }
 
         let overallw = 0
         for (var key in group.buttons) {
@@ -94,6 +105,11 @@ Row {
                 if (button.hasOwnProperty("proposedWidth")) {
                     button.onProposedWidthChanged.disconnect(group.updateMaxWidth)
                     button.onProposedWidthChanged.connect(group.updateMaxWidth)
+                    if (button.hasOwnProperty("orientation")) {
+                        button.orientation = Qt.binding(function () {
+                            return control.orientation
+                        })
+                    }
                     if (button.hasOwnProperty("expandWidth")) {
                         button.expandWidth = Qt.binding(function () {
                             return group.maxWidth

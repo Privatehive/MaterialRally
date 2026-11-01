@@ -201,8 +201,9 @@ Rally.SwipeViewBase {
       \default 0
 
       The index of the page currently shown. Settable to navigate programmatically (e.g. from a
-      tab bar) - doing so animates to the target page the same way a swipe gesture would. During
-      a swipe it changes as soon as the next page is more than half in view.
+      tab bar) - doing so animates to the target page the same way a swipe gesture would, unless
+      \l animateIndexChanges is \c false. During a swipe it changes as soon as the next page is
+      more than half in view.
     */
     property int currentIndex: 0
 
@@ -243,6 +244,17 @@ Rally.SwipeViewBase {
       currentIndex is set programmatically.
     */
     property int settleDuration: 250
+
+    /*!
+      \qmlproperty bool SwipeView::animateIndexChanges
+      \default !Rally.RootItem.isMouseInput
+
+      If \c true, setting \l currentIndex slides to the target page. If \c false, the target page
+      is shown immediately. By default the slide is skipped while the user interacts by mouse,
+      where pages can't be swiped and the slide only delays the page switch. The settle after a
+      swipe gesture is always animated.
+    */
+    property bool animateIndexChanges: !Rally.RootItem.isMouseInput
 
     /*!
       \qmlproperty bool SwipeView::atFirstPage
@@ -320,8 +332,14 @@ Rally.SwipeViewBase {
     // post-construction settle is actually needed.
     onCurrentIndexChanged: {
         control._setCurrentIndex(control.currentIndex)
-        if (!control._dragging && control._pageStep > 0)
-            control._settleTo(control.currentIndex)
+        if (!control._dragging && control._pageStep > 0) {
+            if (control.animateIndexChanges) {
+                control._settleTo(control.currentIndex)
+            } else {
+                settleAnim.stop()
+                control._rowX = -control._clampIndex(control.currentIndex) * control._pageStep
+            }
+        }
     }
 
     // Reacts to pagesRow's resolved children list changing - covers both the initial set of
@@ -479,9 +497,11 @@ Rally.SwipeViewBase {
                 control._dragging = true
                 settleAnim.stop()
             } else {
-                control._dragging = false
                 dragHandler._tracker.compute()
+                // Still _dragging while committing, so onCurrentIndexChanged leaves the settle to
+                // _commitDragEnd - otherwise animateIndexChanges: false would make it jump
                 control._commitDragEnd(dragHandler._tracker.vx)
+                control._dragging = false
             }
         }
 
