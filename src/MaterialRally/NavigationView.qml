@@ -25,9 +25,12 @@ import MaterialRally as Rally
     the current page. The pages are loaded lazily: only the current page and its two neighbours are
     loaded, and they are placed inside a \l ScrollView.
 
-    Every model entry needs the roles \c title (menu label), \c iconName (icon theme name) and
-    \c source (URL of the page's QML file). A relative \c source is resolved against the QML file
-    that declares the model.
+    Every model entry needs the roles \c title (menu label), \c source (URL of the page's QML
+    file) and either \c iconName (icon theme name) or \c iconSource (URL of an icon image). A
+    relative \c source or \c iconSource is resolved against the QML file that declares the model.
+
+    Pages are at least as tall as the view, so a page that only fills its parent (e.g. a chart)
+    gets the full height, while a taller page scrolls.
 
     \section1 Example
 
@@ -55,8 +58,8 @@ Page {
     /*!
       \qmlproperty model NavigationView::model
 
-      The pages to navigate between. Each entry provides the roles \c title, \c iconName and
-      \c source.
+      The pages to navigate between. Each entry provides the roles \c title, \c source and
+      either \c iconName or \c iconSource.
     */
     property var model
 
@@ -99,7 +102,7 @@ Page {
 
     background: null
 
-    // A model entry's source relative to the file declaring the model, not to this file
+    // A model entry's URL relative to the file declaring the model, not to this file
     function resolvedSource(source) {
         // A QObject model (e.g. a ListModel) carries the context of the file declaring it
         const isQObject = control.model && control.model.objectName !== undefined
@@ -125,12 +128,13 @@ Page {
                 model: control.model
                 Rally.TabButtonFolding {
                     required property int index
-                    required property string title
-                    required property string iconName
+                    // Not separate role properties: iconName and iconSource are optional roles
+                    required property var model
 
                     checked: index === view.currentIndex
-                    icon.name: iconName
-                    text: title
+                    icon.name: model.iconName ?? ""
+                    icon.source: model.iconSource ? control.resolvedSource(model.iconSource) : ""
+                    text: model.title
                 }
             }
         }
@@ -173,12 +177,13 @@ Page {
                     model: control.model
                     Rally.TabButtonFolding {
                         required property int index
-                        required property string title
-                        required property string iconName
+                        // Not separate role properties: iconName and iconSource are optional roles
+                        required property var model
 
                         checked: index === view.currentIndex
-                        icon.name: iconName
-                        text: title
+                        icon.name: model.iconName ?? ""
+                        icon.source: model.iconSource ? control.resolvedSource(model.iconSource) : ""
+                        text: model.title
                     }
                 }
             }
@@ -186,6 +191,8 @@ Page {
     }
 
     Rally.ScrollView {
+
+        id: scrollView
 
         anchors.left: rail.right
         anchors.right: parent.right
@@ -205,6 +212,8 @@ Page {
 
             id: view
             width: parent.width
+            // At least the viewport height: a page that only fills its parent has no implicit height
+            height: Math.max(implicitHeight, scrollView.availableHeight)
 
             Repeater {
 
