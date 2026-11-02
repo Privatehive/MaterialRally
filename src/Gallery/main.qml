@@ -33,6 +33,12 @@ Rally.RallyApplicationWindow {
                 iconName: "list-box"
                 source: "FlickableGallery.qml"
             }
+
+            ListElement {
+                title: qsTr("Tiles")
+                iconName: "view-dashboard"
+                source: "TilesGallery.qml"
+            }
         }
     }
 }

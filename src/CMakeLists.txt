@@ -71,6 +71,7 @@ qt_add_qml_module(MaterialRally
         MaterialRally/CollapsibleControl.qml
         MaterialRally/SwipeView.qml
         MaterialRally/NavigationView.qml
+        MaterialRally/TilesLayout.qml
         MaterialRally/helper.js # Don't export (done by renaming to upper case) - Qt bug in importing Project??? qqmlinport.cpp - setQmldirContent() - is ambiguous error
         MaterialRally/Helper.qml
         MaterialRally/private/SizeLabel.qml
@@ -131,6 +132,7 @@ if (FEATURE_GALLERY_APP)
             Gallery/TestDialog.qml
             Gallery/DocItem.qml
             Gallery/FlickableGallery.qml
+            Gallery/TilesGallery.qml
 
             RESOURCES
             "${CMAKE_SOURCE_DIR}/resources/icons/RallyGallery.svg"
@@ -153,6 +155,7 @@ if (FEATURE_GALLERY_APP)
     add_material_icon_theme_resource(MaterialRally THEME_NAME material ICONS
             button-cursor
             list-box
+            view-dashboard
     )
 
     register_icon(RallyGallery
