@@ -31,6 +31,8 @@ qt_add_qml_module(MaterialRally
         QtQuick
 
         SOURCES
+        materialrally.h
+        materialrally.cpp
         rootitemattachedtype.h
         rootitemattachedtype.cpp
         units.h
@@ -106,6 +108,7 @@ qt_add_resources(MaterialRally QtQuickControls2 FILES qtquickcontrols2.conf)
 
 generate_export_header(MaterialRally EXPORT_FILE_NAME MaterialRallyExport.h)
 target_mark_public_header(MaterialRally
+        materialrally.h
         units.h
         ${CMAKE_CURRENT_BINARY_DIR}/MaterialRallyExport.h
 )
