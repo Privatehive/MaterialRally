@@ -1,0 +1,77 @@
+# Tiles are placed at the first free cell in reading order; small tiles fill the gaps (dense).
+load ../scenes/TilesScene.qml
+wait 100
+# Placement only; the animations are tested at the end
+eval tiles.animationDuration = 0
+
+# 4 columns: A fills 0-1 x 0-1, B and C the rest of row 0, D rows 2-3, E and F fill the gap in
+# row 1 beside A, the Repeater's tiles go below D.
+expect tiles.columns === 4 && tiles.cellWidth === 94
+expect JSON.stringify([a, b, c, d, e, f, H.find("r0"), H.find("r1")].map(cell)) === JSON.stringify([[0,0],[2,0],[3,0],[0,2],[2,1],[3,1],[0,4],[1,4]])
+expect tiles.rows === 5 && tiles.implicitHeight === 5 * 94 + 4 * 8
+expect a.width === 2 * 94 + 8 && a.height === a.width && d.width === 4 * 94 + 24 && b.width === 94
+
+# Not dense: E and F stay after D instead of filling the gap beside A.
+eval tiles.dense = false
+wait 50
+expect JSON.stringify([e, f].map(cell)) === JSON.stringify([[0,4],[1,4]]) && tiles.rows === 5
+
+# A hidden tile frees its cell for the next one.
+eval tiles.dense = true; c.visible = false
+wait 50
+expect JSON.stringify([b, e, f].map(cell)) === JSON.stringify([[2,0],[3,0],[2,1]])
+eval c.visible = true
+wait 50
+
+# Changing a span reflows the tiles.
+eval b.Layout.columnSpan = 2
+wait 50
+expect JSON.stringify([b, c, e].map(cell)) === JSON.stringify([[2,0],[2,1],[3,1]])
+eval b.Layout.columnSpan = 1
+wait 50
+
+# Wider: 8 columns, D moves up next to A, B and C.
+size 800 800
+wait 50
+expect tiles.columns === 8 && tiles.cellWidth === 93
+expect JSON.stringify([a, b, c, d, e, f, H.find("r0"), H.find("r1")].map(cell)) === JSON.stringify([[0,0],[2,0],[3,0],[4,0],[2,1],[3,1],[0,2],[1,2]]) && tiles.rows === 3
+
+# Narrower than a tile: 2 columns, the 4-column D is narrowed to both columns.
+size 200 800
+wait 50
+expect tiles.columns === 2 && d.width === tiles.width
+
+# maximumColumns caps the columns, the cells stretch instead.
+size 800 800
+eval tiles.maximumColumns = 4
+wait 50
+expect tiles.columns === 4 && tiles.cellWidth === (800 - 24) / 4
+
+# Animations: a tile moving to another cell glides there, it doesn't jump.
+size 400 800
+eval tiles.maximumColumns = 0; tiles.animationDuration = 250
+wait 50
+expect tiles.columns === 4 && JSON.stringify(cell(e)) === JSON.stringify([2,1])
+eval H.set("e", H.rect(e))
+eval b.Layout.columnSpan = 2
+wait 60
+# Mid-animation: E has left its old cell but not yet reached (3,1)
+expect H.rect(e).x > H.get("e").x && H.rect(e).x < 3 * 102
+wait 400
+expect JSON.stringify([b, c, e].map(cell)) === JSON.stringify([[2,0],[2,1],[3,1]]) && H.rect(e).x === 3 * 102
+
+# A resize that keeps every tile in its cell snaps, so the tiles don't lag behind the window.
+eval b.Layout.columnSpan = 1
+wait 400
+size 420 800
+wait 30
+expect tiles.columns === 4 && a.width === 2 * tiles.cellWidth + 8 && H.rect(b).x === 2 * (tiles.cellWidth + 8)
+
+# A tile shown again snaps into its new cell.
+eval c.visible = false
+wait 400
+eval b.Layout.columnSpan = 2
+wait 400
+eval c.visible = true
+wait 30
+expect JSON.stringify(cell(c)) === JSON.stringify([2,1]) && H.rect(c).y === tiles.cellWidth + 8

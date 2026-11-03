@@ -1,5 +1,6 @@
 #include "AdvancedQmlApplicationEngine.h"
 #include "QtApplicationBase.h"
+#include "materialrally.h"
 #include <QFile>
 #include <QGuiApplication>
 #include <QIcon>
@@ -15,6 +16,7 @@ int main(int argc, char **argv) {
 	qputenv("QSG_INFO", "1");
 
 	QtApplicationBase<QGuiApplication> app(argc, argv);
+	MaterialRally::init();
 	AdvancedQmlApplicationEngine qmlEngine;
 	QIcon::setThemeName("material");
 
